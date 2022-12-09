@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/CheckDisplayValues/CheckDisplayValues/Source/*
+/CheckDisplayValues/CheckDisplayValues/LOINC/*
+/CheckDisplayValues/CheckDisplayValues/appsettings.json
