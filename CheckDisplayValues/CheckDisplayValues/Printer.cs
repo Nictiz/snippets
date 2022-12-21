@@ -19,7 +19,7 @@ namespace CheckDisplayValues
                 else
                 {
                     List<Translation> dutchTranslations = displayValue.GetDutchDisplayValues();
-                    List<Translation> englishTranslations = displayValue.GetDutchDisplayValues();
+                    List<Translation> englishTranslations = displayValue.GetEnglishDisplayValues();
 
                     if (dutchTranslations != null)
                     {
