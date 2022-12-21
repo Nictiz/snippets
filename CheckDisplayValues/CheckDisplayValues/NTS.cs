@@ -17,7 +17,7 @@ namespace CheckDisplayValues
             //setup Rest call
             string? dir = Directory.GetCurrentDirectory();
             string? parent = Directory.GetParent(dir ?? "C:/")?.Parent?.Parent?.FullName;
-            var MyConfig = new ConfigurationBuilder().AddJsonFile($"{parent}/appsettings.json").Build();
+            IConfigurationRoot MyConfig = new ConfigurationBuilder().AddJsonFile($"{parent}/appsettings.json").Build();
 
             client = new HttpClient();
             client.BaseAddress = new Uri("https://terminologieserver.nl/");
@@ -29,6 +29,7 @@ namespace CheckDisplayValues
             param.Add("client_id", MyConfig.GetValue<string>("AppSettings:client_id"));
             param.Add("username", MyConfig.GetValue<string>("AppSettings:username"));
             param.Add("password", MyConfig.GetValue<string>("AppSettings:password"));
+            
 
             HttpResponseMessage response = client.PostAsync("auth/realms/nictiz/protocol/openid-connect/token", new FormUrlEncodedContent(param)).Result;
             Console.WriteLine(response.StatusCode);
@@ -50,13 +51,13 @@ namespace CheckDisplayValues
                     {
                         while (reader.Read()) //Each ROW
                         {
-                            string code = null;
-                            string translation = null;
+                            string? code = null;
+                            string? translation = null;
 
 
                             code = reader.GetValue(0).ToString();
                             translation = reader.GetValue(1).ToString();
-                            LOINCList.Add(code, translation);
+                            LOINCList.Add(code ?? "9999-9", translation ?? "");
                         }
                     } while (reader.NextResult()); //Move to NEXT SHEET
                 }
@@ -66,7 +67,6 @@ namespace CheckDisplayValues
 
         public List<Translation> GetDisplayListValue(string code, string system)
         {
-            
             List<Translation> translations = new List<Translation>();
             if (system == "http://snomed.info/sct")
             {
@@ -79,14 +79,14 @@ namespace CheckDisplayValues
 
                 foreach (Parameters.ParameterComponent display in components)
                 {
-                    string language = display.Part.Find(l => l.Name == "language").Value.ToString();
-                    Coding use = (Coding)display.Part.Find(l => l.Name == "use").Value;
-                    string value = display.Part.Find(l => l.Name == "value").Value.ToString();
+                    string? language = display.Part.Find(l => l.Name == "language")?.Value.ToString();
+                    Coding? use = display.Part.Find(l => l.Name == "use")?.Value as Coding;
+                    string? value = display.Part.Find(l => l.Name == "value")?.Value.ToString();
 
                     translations.Add(new Translation()
                     {
                         Language = language,
-                        Use = use.Display ?? use.Code,
+                        Use = use?.Display ?? use?.Code,
                         Display = value
                     });
 
@@ -105,12 +105,5 @@ namespace CheckDisplayValues
             }
             return translations;
         }
-    }
-
-    public class Translation
-    {
-        public string Language { get; set; }
-        public string Use { get; set; }
-        public string Display { get; set; }
     }
 }
