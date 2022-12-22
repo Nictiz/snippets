@@ -1,7 +1,10 @@
 ﻿using Hl7.Fhir.ElementModel;
+using Hl7.Fhir.ElementModel.Types;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Hl7.Fhir.Specification.Source;
+using System.ComponentModel;
+using Code = Hl7.Fhir.Model.Code;
 
 namespace CheckDisplayValues
 {
@@ -16,6 +19,10 @@ namespace CheckDisplayValues
             this.nts = new();
         }
 
+        /// <summary>
+        /// Searches all SNOMED/LOINC codes in a file and finds the correct .display value
+        /// </summary>
+        /// <param name="file"></param>
         public void CheckFile(FileInfo file)
         {
             this.displayValues = new List<DisplayValue>();
@@ -32,19 +39,19 @@ namespace CheckDisplayValues
 
                 CheckElement(element);
 
-                CheckValueSets(resource);
+                SearchPackages(resource);
 
                 Printer.PrintInconsistency(displayValues);
             }
         }
 
-        private void CheckValueSets(Resource resource)
+        /// <summary>
+        /// Searched the required packages on any StructureDefinitions. The StructureDefinition is then searched to see if there are any valueSets required.
+        /// </summary>
+        /// <param name="resource"></param>
+        private void SearchPackages(Resource resource)
         {
             string profileUri = resource.Meta.Profile.FirstOrDefault("");
-            // TODO CheckDisplayValues
-            // 1. search package for StructureDefinition
-            // 2. Search StructureDefintion if valueSets are being used
-            // 3. If valueset is used, search valueset if it contains a code which is also in the List<DisplayValue>
 
             FhirPackageSource resolver = new(new string[] { "..\\..\\..\\Packages\\nictiz.fhir.nl.stu3.zib2017-2.2.8.tgz", "..\\..\\..\\Packages\\nictiz.fhir.nl.stu3.eafspraak-1.0.6.tgz" });
 
@@ -52,40 +59,95 @@ namespace CheckDisplayValues
 
             List<ElementDefinition> components = sd.Differential.Element;
 
+            //for each component in the StructureDefinition.Differential.Element
             foreach(ElementDefinition component in components)
             {
+                //If the component contains a binding
                 if(component.Binding != null)
                 {
+                    //If the binding contains a valueset
                     if(component.Binding.ValueSet != null)
                     {
                         string valueSetReference = component.Binding.ValueSet.First().Value.ToString();
 
+                        //
                         if (component.Binding.ValueSet.Extension.Count == 0)
                         {
                             ValueSet vs = resolver.FindValueSet(valueSetReference);
-
-                            ValueSet.ConceptSetComponent? snomedCodes = vs.Compose.Include.FirstOrDefault(x => x.System == "http://snomed.info/sct");
-                            ValueSet.ConceptSetComponent? loincCodes = vs.Compose.Include.FirstOrDefault(x => x.System == "http://loinc.org");
-
-                            if (snomedCodes != null)
-                            {
-                                CheckExternalCodes(snomedCodes);
-                            } else if(loincCodes != null)
-                            {
-                                CheckExternalCodes(loincCodes);
-                            }
+                            ReadValueSet(vs);
+                            
                         }
                         else
                         {
-
+                            CheckValueSet(component, resolver);
                         }
-
                     }
                 }
             }
-
         }
 
+        /// <summary>
+        /// Searches the packages on a specific valueSet and checks if it contains any bindings.
+        /// </summary>
+        /// <param name="component"></param>
+        /// <param name="resolver"></param>
+        private void CheckValueSet(ElementDefinition component, FhirPackageSource resolver)
+        {
+            string valueSetReference = component.Binding.ValueSet.Extension.First().Value.First().Value.ToString();
+            ConceptMap cm = (ConceptMap)resolver.ResolveByCanonicalUri(valueSetReference);
+            if (cm == null)
+            {
+                Console.WriteLine($"Could not find {valueSetReference}");
+            }
+            else
+            {
+                ValueSet vs = resolver.FindValueSet(cm.Source.First().Value.ToString());
+                if (vs != null)
+                    ReadValueSet(vs);
+                else
+                {
+                    foreach (ConceptMap.SourceElementComponent element in cm.Group.First().Element)
+                    {
+                        if (displayValues.Any(x => x.code == element.Target.First().Code))
+                        {
+                            if (displayValues.First(x => x.code == element.Target.First().Code).displayCurrent != element.Target.First().Display)
+                            {
+                                displayValues.First(x => x.code == element.Target.First().Code).displayCorrect.Add(new Translation()
+                                {
+                                    Language = "nl",
+                                    Use = "ZiB",
+                                    Display = element.Target.First().Display
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reads a valueset and checks if there are any alternative SNOMED/LOINC codes
+        /// </summary>
+        /// <param name="vs"></param>
+        private void ReadValueSet(ValueSet vs)
+        {
+            ValueSet.ConceptSetComponent? snomedCodes = vs.Compose.Include.FirstOrDefault(x => x.System == "http://snomed.info/sct");
+            ValueSet.ConceptSetComponent? loincCodes = vs.Compose.Include.FirstOrDefault(x => x.System == "http://loinc.org");
+
+            if (snomedCodes != null)
+            {
+                CheckExternalCodes(snomedCodes);
+            }
+            else if (loincCodes != null)
+            {
+                CheckExternalCodes(loincCodes);
+            }
+        }
+
+        /// <summary>
+        /// Goes through the externalCodes and adds a new Translation to displayValues if the code is used
+        /// </summary>
+        /// <param name="externalCodes"></param>
         private void CheckExternalCodes(ValueSet.ConceptSetComponent? externalCodes)
         {
             foreach (ValueSet.ConceptReferenceComponent code in externalCodes.Concept)

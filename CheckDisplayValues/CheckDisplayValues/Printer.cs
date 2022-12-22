@@ -8,11 +8,17 @@ namespace CheckDisplayValues
 {
     public static class Printer
     {
+        /// <summary>
+        /// Goes trhrough all codes in a file and then checks if the current display value is allowed.
+        /// </summary>
+        /// <param name="displayValues"></param>
         public static void PrintInconsistency(List<DisplayValue> displayValues)
         {
-            foreach(DisplayValue displayValue in displayValues)
+            //for every code in the file
+            foreach (DisplayValue displayValue in displayValues)
             {
-                if (displayValue.IsZiBValueSet())
+                // Currently set to false as this displays a message if the current display value is not identical to the ZiB value
+                if (displayValue.IsZiBValueSet() && false)
                 {
                     PrintMessage(displayValue.displayCurrent, displayValue.displayCorrect.First(x => x.Use == "ZiB").Display, displayValue.code, true);
                 }
