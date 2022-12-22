@@ -23,7 +23,7 @@ namespace CheckDisplayValues
         /// Searches all SNOMED/LOINC codes in a file and finds the correct .display value
         /// </summary>
         /// <param name="file"></param>
-        public void CheckFile(FileInfo file)
+        public void CheckFile(FileInfo file, List<string> packageNames)
         {
             this.displayValues = new List<DisplayValue>();
             if (File.Exists(file.FullName))
@@ -39,7 +39,7 @@ namespace CheckDisplayValues
 
                 CheckElement(element);
 
-                SearchPackages(resource);
+                SearchPackages(resource, packageNames);
 
                 Printer.PrintInconsistency(displayValues);
             }
@@ -49,11 +49,12 @@ namespace CheckDisplayValues
         /// Searched the required packages on any StructureDefinitions. The StructureDefinition is then searched to see if there are any valueSets required.
         /// </summary>
         /// <param name="resource"></param>
-        private void SearchPackages(Resource resource)
+        private void SearchPackages(Resource resource, List<string> packageNames)
         {
             string profileUri = resource.Meta.Profile.FirstOrDefault("");
 
-            FhirPackageSource resolver = new(new string[] { "..\\..\\..\\Packages\\nictiz.fhir.nl.stu3.zib2017-2.2.8.tgz", "..\\..\\..\\Packages\\nictiz.fhir.nl.stu3.eafspraak-1.0.6.tgz" });
+            //FhirPackageSource resolver = new(new string[] { "..\\..\\..\\Packages\\nictiz.fhir.nl.stu3.zib2017-2.2.8.tgz", "..\\..\\..\\Packages\\nictiz.fhir.nl.stu3.eafspraak-1.0.6.tgz" });
+            FhirPackageSource resolver = new(packageNames.ToArray());
 
             StructureDefinition sd = resolver.FindStructureDefinition(profileUri);
 
