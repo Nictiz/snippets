@@ -1,9 +1,4 @@
-﻿using Hl7.Fhir.Serialization;
-using Hl7.Fhir.Model;
-using Hl7.Fhir.ElementModel;
-//using Vonk.Core.Common;
-
-namespace CheckDisplayValues
+﻿namespace CheckDisplayValues
 {
     public class Program
     {

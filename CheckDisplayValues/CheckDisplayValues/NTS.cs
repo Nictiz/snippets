@@ -14,8 +14,10 @@ namespace CheckDisplayValues
 
         public NTS()
         {
+            Console.Write("Establishing connection to NTS: ");
+
             //setup Rest call
-            string? dir = Directory.GetCurrentDirectory();
+            string ? dir = Directory.GetCurrentDirectory();
             string? parent = Directory.GetParent(dir ?? "C:/")?.Parent?.Parent?.FullName;
             IConfigurationRoot MyConfig = new ConfigurationBuilder().AddJsonFile($"{parent}/appsettings.json").Build();
 

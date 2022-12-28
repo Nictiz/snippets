@@ -1,9 +1,7 @@
 ﻿using Hl7.Fhir.ElementModel;
-using Hl7.Fhir.ElementModel.Types;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Hl7.Fhir.Specification.Source;
-using System.ComponentModel;
 using Code = Hl7.Fhir.Model.Code;
 
 namespace CheckDisplayValues
@@ -30,7 +28,6 @@ namespace CheckDisplayValues
             {
                 string xmlString = System.IO.File.ReadAllText(file.FullName);
 
-                Console.WriteLine($"{file.Name}: ");
                 var parser = new FhirXmlParser();
 
                 Resource resource = parser.Parse<Resource>(xmlString);
@@ -40,8 +37,9 @@ namespace CheckDisplayValues
                 CheckElement(element);
 
                 SearchPackages(resource, packageNames);
+                Printer printer = new(file.Name);
 
-                Printer.PrintInconsistency(displayValues);
+                printer.PrintInconsistency(displayValues);
             }
         }
 
@@ -53,7 +51,6 @@ namespace CheckDisplayValues
         {
             string profileUri = resource.Meta.Profile.FirstOrDefault("");
 
-            //FhirPackageSource resolver = new(new string[] { "..\\..\\..\\Packages\\nictiz.fhir.nl.stu3.zib2017-2.2.8.tgz", "..\\..\\..\\Packages\\nictiz.fhir.nl.stu3.eafspraak-1.0.6.tgz" });
             FhirPackageSource resolver = new(packageNames.ToArray());
 
             StructureDefinition sd = resolver.FindStructureDefinition(profileUri);
@@ -98,7 +95,8 @@ namespace CheckDisplayValues
             ConceptMap cm = (ConceptMap)resolver.ResolveByCanonicalUri(valueSetReference);
             if (cm == null)
             {
-                Console.WriteLine($"Could not find {valueSetReference}");
+                this.displayValues.Add(new DisplayValue("Validation", valueSetReference, null, null, null));
+                //Console.WriteLine($"Could not find {valueSetReference}");
             }
             else
             {

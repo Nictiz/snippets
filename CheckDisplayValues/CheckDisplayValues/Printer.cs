@@ -6,19 +6,35 @@ using System.Threading.Tasks;
 
 namespace CheckDisplayValues
 {
-    public static class Printer
+    public class Printer
     {
+        public const string WARNING = "WARNING";
+        public const string ERROR = "ERROR";
+
+        string fileName;
+        bool firstMessage = true;
+
+        public Printer(string fileName)
+        {
+            this.fileName = fileName;
+            this.firstMessage = true;
+        }
+
         /// <summary>
         /// Goes trhrough all codes in a file and then checks if the current display value is allowed.
         /// </summary>
         /// <param name="displayValues"></param>
-        public static void PrintInconsistency(List<DisplayValue> displayValues)
+        public void PrintInconsistency(List<DisplayValue> displayValues)
         {
             //for every code in the file
             foreach (DisplayValue displayValue in displayValues)
             {
+                if(displayValue.system == "Validation")
+                {
+                    PrintMessage(null,null, displayValue.code);
+                }
                 // Currently set to false as this displays a message if the current display value is not identical to the ZiB value
-                if (displayValue.IsZiBValueSet() && false)
+                else if (displayValue.IsZiBValueSet() && false)
                 {
                     PrintMessage(displayValue.displayCurrent, displayValue.displayCorrect.First(x => x.Use == "ZiB").Display, displayValue.code, true);
                 }
@@ -61,22 +77,53 @@ namespace CheckDisplayValues
         /// <param name="original"></param>
         /// <param name="nts"></param>
         /// <param name="code"></param>
-        private static void PrintMessage(string original, string nts, string code, bool ZiB = false)
+        private void PrintMessage(string original, string nts, string code, bool ZiB = false)
         {
-            if (original.ToLower() != nts.ToLower())
+            if (this.firstMessage)
             {
-                Console.Write($"        {code}:\"{original}\" Should be:\"{nts}\" ");
-                if (ZiB)
-                {
-                    Console.Write("According to the ZiB");
-                }
+                Console.WriteLine($"{fileName}: ");
+                this.firstMessage = false;
+            }
 
+            if(original == null)
+            {
+                PrintWarningError(Printer.WARNING);
+                Console.WriteLine($"Could not find {code}");
+            }
+            else if (original.ToLower() != nts.ToLower())
+            {
                 if (nts.Equals(""))
                 {
-                    Console.Write("WARNING!: No translation available, please check manually");
+                    PrintWarningError(Printer.WARNING);
+                    Console.Write($"No translation available for code \"{code}\", please check manually");
+                }
+                else
+                {
+                    PrintWarningError(Printer.ERROR);
+                    Console.Write($"{code}:\"{original}\" Should be:\"{nts}\" ");
+                    if (ZiB)
+                    {
+                        Console.Write("According to the ZiB");
+                    }
                 }
                 Console.WriteLine("");
             }
+        }
+
+        private void PrintWarningError(string level)
+        {
+            if (level == Printer.WARNING)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("\tWARNING: ");
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write("\tERROR: ");
+            }
+
+            Console.ResetColor();
         }
     }
 
