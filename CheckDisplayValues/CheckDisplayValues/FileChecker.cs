@@ -2,14 +2,13 @@
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Hl7.Fhir.Specification.Source;
-using Code = Hl7.Fhir.Model.Code;
 
 namespace CheckDisplayValues
 {
     public class FileChecker
     {
         ITypedElement? element;
-        NTS nts;
+        public NTS nts;
         List<DisplayValue>? displayValues;
 
         public FileChecker()
@@ -24,9 +23,13 @@ namespace CheckDisplayValues
         public void CheckFile(FileInfo file, List<string> packageNames)
         {
             this.displayValues = new List<DisplayValue>();
-            if (File.Exists(file.FullName))
+            if (File.Exists(file.FullName) && file.Name.EndsWith(".xml"))
             {
                 string xmlString = System.IO.File.ReadAllText(file.FullName);
+                if (xmlString.Contains("${"))
+                {
+                    xmlString = this.ReplaceTDate(xmlString);
+                }
 
                 var parser = new FhirXmlParser();
 
@@ -95,8 +98,7 @@ namespace CheckDisplayValues
             ConceptMap cm = (ConceptMap)resolver.ResolveByCanonicalUri(valueSetReference);
             if (cm == null)
             {
-                this.displayValues.Add(new DisplayValue("Validation", valueSetReference, null, null, null));
-                //Console.WriteLine($"Could not find {valueSetReference}");
+                this.displayValues.Add(new DisplayValue("Validation", valueSetReference, null, null));
             }
             else
             {
@@ -208,7 +210,7 @@ namespace CheckDisplayValues
                 var code = codeableconcept.Coding.Find(c => c.System == "http://snomed.info/sct" || c.System == "http://loinc.org");
                 if (code != null)
                 {
-                    displayValues?.Add(new DisplayValue(code.System, code.Code, code.Display, nts.GetDisplayListValue(code.Code, code.System), ""));
+                    displayValues?.Add(new DisplayValue(code.System, code.Code, code.Display, nts.GetDisplayListValue(code.Code, code.System)));
                 }
             }
             else if (element.InstanceType == "Coding")
@@ -216,7 +218,7 @@ namespace CheckDisplayValues
                 Coding coding = (Coding)element.ToPoco();
                 if (coding.System == "http://snomed.info/sct" || coding.System == "http://loinc.org")
                 {
-                    displayValues?.Add(new DisplayValue(coding.System, coding.Code, coding.Display, nts.GetDisplayListValue(coding.Code, coding.System), ""));
+                    displayValues?.Add(new DisplayValue(coding.System, coding.Code, coding.Display, nts.GetDisplayListValue(coding.Code, coding.System)));
                 }
             }
             else if (element.InstanceType == "code")
@@ -228,7 +230,7 @@ namespace CheckDisplayValues
                     var subCode = codeableconcept?.Coding.Find(c => c.System == "http://snomed.info/sct" || c.System == "http://loinc.org");
                     if (subCode != null)
                     {
-                        displayValues?.Add(new DisplayValue(subCode.System, subCode.Code, subCode.Display, nts.GetDisplayListValue(subCode.Code, subCode.System), ""));
+                        displayValues?.Add(new DisplayValue(subCode.System, subCode.Code, subCode.Display, nts.GetDisplayListValue(subCode.Code, subCode.System)));
                     }
                 }
                 else
@@ -240,6 +242,39 @@ namespace CheckDisplayValues
             {
                 Console.WriteLine($"{element.InstanceType} not implemented yet");
             }
+        }
+
+        /// <summary>
+        /// Replaces all T-Dates to make the string parseable
+        /// </summary>
+        /// <param name="xmlString"></param>
+        /// <returns></returns>
+        private string ReplaceTDate(string xmlString)
+        {
+            int firstIndex = xmlString.IndexOf("\"${");
+            int lastIndex = firstIndex + 1;
+
+            while (true) 
+            {
+                char nextCrar = xmlString[lastIndex];
+
+                if(nextCrar.ToString() == "\"")
+                {
+                    string substring = xmlString.Substring(firstIndex, lastIndex - firstIndex);
+                    xmlString = xmlString.Replace(substring, "\"2022-01-01");
+
+                    if (xmlString.Contains("\"${"))
+                    {
+                        xmlString = ReplaceTDate(xmlString);
+                    }
+                    break;
+                }
+                else
+                {
+                    lastIndex++;
+                }
+            }
+            return xmlString;
         }
     }
 }

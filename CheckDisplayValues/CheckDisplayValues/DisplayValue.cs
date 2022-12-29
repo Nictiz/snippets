@@ -12,15 +12,21 @@ namespace CheckDisplayValues
         public string code;
         public string displayCurrent;
         public List<Translation> displayCorrect;
-        public string location;
 
-        public DisplayValue(string system, string code, string displayCurrent, List<Translation> displayCorrect, string location)
+        /// <summary>
+        /// A specific displayvalue containing all correct translations
+        /// </summary>
+        /// <param name="system">Corresponding system of the code (LOINC or SNOMED)</param>
+        /// <param name="code">The code itself</param>
+        /// <param name="displayCurrent">The current displayValue</param>
+        /// <param name="displayCorrect"></param>
+        public DisplayValue(string system, string code, string displayCurrent, List<Translation> displayCorrect)
         {
             this.system = system;
             this.code = code;
             this.displayCurrent = displayCurrent;
             this.displayCorrect = displayCorrect;
-            this.location = location;
+            //this.location = location;
         }
 
         public bool IsZiBValueSet()
