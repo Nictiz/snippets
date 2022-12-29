@@ -39,10 +39,14 @@ namespace CheckDisplayValues
 
                 CheckElement(element);
 
-                SearchPackages(resource, packageNames);
-                Printer printer = new(file.Name);
+                //Only search packages and print if there the file contains any codes
+                if (this.displayValues.Count > 0)
+                {
+                    SearchPackages(resource, packageNames);
+                    Printer printer = new(file.Name);
 
-                printer.PrintInconsistency(displayValues);
+                    printer.PrintInconsistency(displayValues);
+                }
             }
         }
 

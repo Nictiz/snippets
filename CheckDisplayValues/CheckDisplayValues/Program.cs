@@ -6,7 +6,6 @@ namespace CheckDisplayValues
     {
         public static void Main()
         {
-            DirectoryInfo d = new DirectoryInfo("..\\..\\..\\Source");
             DirectoryInfo packages = new DirectoryInfo("..\\..\\..\\Packages");
 
             string? dir = Directory.GetCurrentDirectory();
@@ -47,6 +46,7 @@ namespace CheckDisplayValues
         {
             switch (standard.Name)
             {
+                //TODO add all standards
                 case "BgZ-3-0":
                     CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources"), packages, standard.Name);
                     break;

@@ -61,7 +61,9 @@ namespace CheckDisplayValues
             }
             catch (Exception ex) 
             {
-                Console.WriteLine("Failed to establish connection, continuing without NTS");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("ERROR: Failed to establish connection, continuing without NTS");
+                Console.ResetColor();
                 Console.WriteLine("");
                 _connected = false;
             }
@@ -97,6 +99,7 @@ namespace CheckDisplayValues
             if (system == "http://snomed.info/sct")
                 totalSNOMEDLookups++;
 
+            // By checking if we allready searched for this specific code, we don't have to do the entire lookup again.
             DisplayValue? displayValue = _displayValues.FirstOrDefault(x => x.code == code);
             if(displayValue != null)
             {
@@ -145,6 +148,7 @@ namespace CheckDisplayValues
                     }
                 }
 
+                // Adding the translations to our local displayValue storage, to save time if the code is used again.
                 _displayValues.Add(new DisplayValue(system, code, "", translations.ConvertAll(Translation => Translation.DeepCopy()))); ;
                 return translations;
             }
