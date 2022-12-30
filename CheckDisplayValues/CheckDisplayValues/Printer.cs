@@ -145,7 +145,7 @@ namespace CheckDisplayValues
         {
             Console.WriteLine();
             Console.WriteLine("Done");
-            Console.WriteLine($"Out of the {nts.totalSNOMEDLookups} SNOMED lookups, {nts.savedSNOMEDLookups} were allready done before");
+            Console.WriteLine($"Out of the {nts.totalSNOMEDLookups} SNOMED lookups, {nts.savedSNOMEDLookups} were already done before");
 
             Console.WriteLine("Standards containing errors or warnings:");
             foreach(string name in standardNameList)

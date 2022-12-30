@@ -15,8 +15,8 @@ In order to run the code, please do the following:
     }
     ```
     This is where your NTS credentials are stored. The file is included in the `.gitignore` to avoid leaking.
-2. In the `LOINC` folder include the latest `LOINC-nlnames-*.**-patch.xlsx` file. The program assumes the file has only two columns. The first column contains the LOINC codes and the second the Dutch translations.
-3. Please put all `.tgz` package files that needs to be checked for valueSets in the `CheckDiplayValue\Packages` folder. If it does not yet exist, create one.
+2. Create a folder `CheckDiplayValues\LOINC` if it does not already exist. Include the latest `LOINC-nlnames-*.**-patch.xlsx` file in this folder. The program assumes the file has only two columns. The first column contains the LOINC codes and the second the Dutch translations.
+3. Please put all `.tgz` package files that need to be checked for valueSets in the `CheckDiplayValues\Packages` folder. If it does not yet exist, create one.
 
 
 Please keep in mind that only the following information standards are currently supported:
