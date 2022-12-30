@@ -9,13 +9,14 @@ namespace CheckDisplayValues
 {
     public class NTS
     {
-        HttpClient client;
-        Dictionary<string, string> LOINCList;
-        private bool _connected = false;
-        private List<DisplayValue> _displayValues;
         public int savedSNOMEDLookups = 0;
         public int totalSNOMEDLookups = 0;
+        public bool _connected = false;
 
+        private HttpClient? client;
+        private Dictionary<string, string> LOINCList;
+        private List<DisplayValue> _displayValues;
+        
         public NTS()
         {
             _displayValues = new();

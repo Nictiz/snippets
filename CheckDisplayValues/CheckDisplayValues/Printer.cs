@@ -10,26 +10,37 @@ namespace CheckDisplayValues
     {
         public const string WARNING = "WARNING";
         public const string ERROR = "ERROR";
+        public bool firstMessage = true;
 
-        string fileName;
-        bool firstMessage = true;
+        private string fileName;
+        private int warningCount;
+        private int errorCount;
 
+        /// <summary>
+        /// Class that compares all analyzes all DisplayValues and prints any inconsistencies
+        /// </summary>
+        /// <param name="fileName"></param>
         public Printer(string fileName)
         {
             this.fileName = fileName;
-            this.firstMessage = true;
+            this.warningCount = 0;
+            this.errorCount = 0;
+            firstMessage = true;
         }
 
         /// <summary>
         /// Goes trhrough all codes in a file and then checks if the current display value is allowed.
         /// </summary>
         /// <param name="displayValues"></param>
-        public void PrintInconsistency(List<DisplayValue> displayValues)
+        public Tuple<int, int> PrintInconsistency(List<DisplayValue> displayValues)
         {
+            warningCount = 0;
+            errorCount = 0;
+
             //for every code in the file
             foreach (DisplayValue displayValue in displayValues)
             {
-                if(displayValue.system == "Validation")
+                if(displayValue.system == FileChecker.NOTFOUNDINPACKAGE)
                 {
                     PrintMessage(null,null, displayValue.code);
                 }
@@ -69,6 +80,7 @@ namespace CheckDisplayValues
                     }
                 }
             }
+            return new Tuple<int, int>(warningCount,errorCount);
         }
 
         /// <summary>
@@ -89,6 +101,7 @@ namespace CheckDisplayValues
             {
                 PrintWarningError(Printer.WARNING);
                 Console.WriteLine($"Could not find {code}");
+                warningCount++;
             }
             else if (original.ToLower() != nts.ToLower())
             {
@@ -96,6 +109,7 @@ namespace CheckDisplayValues
                 {
                     PrintWarningError(Printer.WARNING);
                     Console.Write($"No translation available for code \"{code}\", please check manually");
+                    warningCount++;
                 }
                 else
                 {
@@ -105,12 +119,13 @@ namespace CheckDisplayValues
                     {
                         Console.Write("According to the ZiB");
                     }
+                    errorCount++;
                 }
                 Console.WriteLine("");
             }
         }
 
-        private void PrintWarningError(string level)
+        private static void PrintWarningError(string level)
         {
             if (level == Printer.WARNING)
             {
@@ -125,6 +140,30 @@ namespace CheckDisplayValues
 
             Console.ResetColor();
         }
-    }
 
+        public static void PrintStats(List<string> standardNameList, Tuple<int, int> results, NTS nts)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Done");
+            Console.WriteLine($"Out of the {nts.totalSNOMEDLookups} SNOMED lookups, {nts.savedSNOMEDLookups} were allready done before");
+
+            Console.WriteLine("Standards containing errors or warnings:");
+            foreach(string name in standardNameList)
+            {
+                Console.WriteLine(name);
+            }
+            Console.WriteLine();
+            Console.Write($"Total amount of ");
+            PrintWarningError(Printer.WARNING);
+            Console.WriteLine($" {results.Item1}");
+            Console.Write($"Total amount of ");
+            PrintWarningError(Printer.ERROR);
+            Console.WriteLine($" {results.Item2}");
+
+            if (!nts._connected)
+            {
+                Console.WriteLine("Please keep in mind that the NTS was not used due to an earlier error. All warnings and errors need to be checked manually.");
+            }
+        }
+    }
 }

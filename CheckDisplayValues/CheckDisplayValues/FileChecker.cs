@@ -7,13 +7,17 @@ namespace CheckDisplayValues
 {
     public class FileChecker
     {
-        ITypedElement? element;
         public NTS nts;
-        List<DisplayValue>? displayValues;
+        public const string NOTFOUNDINPACKAGE = "NotFoundInPackage";
+        public int warningCount = 0;
+        public int errorCount = 0;
 
-        public FileChecker()
+        private List<DisplayValue>? displayValues;
+        private ITypedElement? element;
+
+        public FileChecker(NTS nts)
         {
-            this.nts = new();
+            this.nts = nts;
         }
 
         /// <summary>
@@ -45,7 +49,9 @@ namespace CheckDisplayValues
                     SearchPackages(resource, packageNames);
                     Printer printer = new(file.Name);
 
-                    printer.PrintInconsistency(displayValues);
+                    Tuple<int, int> results = printer.PrintInconsistency(displayValues);
+                    warningCount += results.Item1;
+                    errorCount += results.Item2;
                 }
             }
         }
@@ -73,18 +79,17 @@ namespace CheckDisplayValues
                     //If the binding contains a valueset
                     if(component.Binding.ValueSet != null)
                     {
-                        string valueSetReference = component.Binding.ValueSet.First().Value.ToString();
-
-                        //
-                        if (component.Binding.ValueSet.Extension.Count == 0)
+                        // If de binding is a ValueSet
+                        if(!component.Binding.ValueSet.HasExtensions())
                         {
-                            ValueSet vs = resolver.FindValueSet(valueSetReference);
+                            ResourceReference reference = (ResourceReference)component.Binding.ValueSet;
+                            ValueSet vs = resolver.FindValueSet(reference.Url.ToString());
                             ReadValueSet(vs);
-                            
                         }
-                        else
+                        // If de binding is a ConceptMap
+                        else if (component.Binding.ValueSet.HasExtensions())
                         {
-                            CheckValueSet(component, resolver);
+                            ReadConceptMapAsync(component.Binding.ValueSet.Extension.First(), resolver);
                         }
                     }
                 }
@@ -96,35 +101,38 @@ namespace CheckDisplayValues
         /// </summary>
         /// <param name="component"></param>
         /// <param name="resolver"></param>
-        private void CheckValueSet(ElementDefinition component, FhirPackageSource resolver)
+        private void ReadConceptMapAsync(Extension component, FhirPackageSource resolver)
         {
-            string valueSetReference = component.Binding.ValueSet.Extension.First().Value.First().Value.ToString();
-            ConceptMap cm = (ConceptMap)resolver.ResolveByCanonicalUri(valueSetReference);
+            string valueSetReference = component.Value.First().Value.ToString();
+
+            // TODO awaiting MM-4198 (https://bits.nictiz.nl/browse/MM-4198)
+            if (valueSetReference == "http://nictiz.nl/fhir/ConceptMap/InterpretatieVlaggenCodelijst-To-Observation-Interpretation")
+            {
+                valueSetReference = "http://nictiz.nl/fhir/ConceptMap/InterpretatieVlaggenCodelijst-to-observation-interpretation";
+            }
+
+            ConceptMap cm = resolver.ResolveByCanonicalUri(valueSetReference) as ConceptMap;
+
+            // If ConceptMap was not found
             if (cm == null)
             {
-                this.displayValues.Add(new DisplayValue("Validation", valueSetReference, null, null));
+                this.displayValues.Add(new DisplayValue(FileChecker.NOTFOUNDINPACKAGE, valueSetReference, null, null));
             }
             else
             {
-                ValueSet vs = resolver.FindValueSet(cm.Source.First().Value.ToString());
-                if (vs != null)
-                    ReadValueSet(vs);
-                else
+                // For every element in the ConceptMap group
+                foreach (ConceptMap.SourceElementComponent element in cm.Group.First().Element)
                 {
-                    foreach (ConceptMap.SourceElementComponent element in cm.Group.First().Element)
+                    // Check if the SourceElementComponent contains any codes which are already in displayValues. We don't want to check codes which aren't used.
+                    if (displayValues.Any(x => x.code == element.Target.First().Code))
                     {
-                        if (displayValues.Any(x => x.code == element.Target.First().Code))
+                        // If a code is used in the file, we add the given translation to displayValues. 
+                        displayValues.First(x => x.code == element.Target.First().Code).displayCorrect.Add(new Translation()
                         {
-                            if (displayValues.First(x => x.code == element.Target.First().Code).displayCurrent != element.Target.First().Display)
-                            {
-                                displayValues.First(x => x.code == element.Target.First().Code).displayCorrect.Add(new Translation()
-                                {
-                                    Language = "nl",
-                                    Use = "ZiB",
-                                    Display = element.Target.First().Display
-                                });
-                            }
-                        }
+                            Language = "nl",
+                            Use = "ZiB",
+                            Display = element.Target.First().Display
+                        });
                     }
                 }
             }
@@ -136,6 +144,7 @@ namespace CheckDisplayValues
         /// <param name="vs"></param>
         private void ReadValueSet(ValueSet vs)
         {
+            // We only need to check if there is a SNOMED or LOINC code, as we are only checking those displayValues
             ValueSet.ConceptSetComponent? snomedCodes = vs.Compose.Include.FirstOrDefault(x => x.System == "http://snomed.info/sct");
             ValueSet.ConceptSetComponent? loincCodes = vs.Compose.Include.FirstOrDefault(x => x.System == "http://loinc.org");
 
@@ -159,15 +168,12 @@ namespace CheckDisplayValues
             {
                 if (displayValues.Any(x => x.code == code.Code))
                 {
-                    if (displayValues.First(x => x.code == code.Code).displayCurrent != code.Designation.First().Value)
+                    displayValues.First(x => x.code == code.Code).displayCorrect.Add(new Translation()
                     {
-                        displayValues.First(x => x.code == code.Code).displayCorrect.Add(new Translation()
-                        {
-                            Language = "nl",
-                            Use = "ZiB",
-                            Display = code.Designation.First().Value
-                        });
-                    }
+                        Language = "nl",
+                        Use = "ZiB",
+                        Display = code.Designation.First().Value
+                    });
                 }
             }
         }
