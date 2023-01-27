@@ -64,6 +64,10 @@ namespace CheckDisplayValues
             switch (standard.Name)
             {
                 //TODO add all standards
+                case "AllergyIntolerance-3-0":
+                    CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\AllergyIntolerance20"), packages, standard.Name + " (AllergyIntolerance20)");
+                    CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\AllergyIntoleranceConv"), packages, standard.Name + " (AllergyIntoleranceConv)");
+                    break;
                 case "BgZ-3-0":
                     CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources"), packages, standard.Name);
                     break;
@@ -73,6 +77,30 @@ namespace CheckDisplayValues
                 case "GenPractData-2-0":
                     CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources-query-send"), packages, standard.Name + " (query-send)");
                     CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources-generic"), packages, standard.Name + " (generic)");
+                    break;
+                case "GGZ-2-0":
+                    CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources"), packages, standard.Name);
+                    break;
+                case "Images-2-0":
+                    CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\transaction-bundles"), packages, standard.Name);
+                    break;
+                case "LaboratoryResults-2-0":
+                    CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources-generic"), packages, standard.Name + " (generic)");
+                    CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources-query-send"), packages, standard.Name + " (query-send)");
+                    break;
+                case "PDFA-3-0":
+                    CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources"), packages, standard.Name);
+                    break;
+                case "Questionnaires-2-0":
+                    CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources\\resources-generic"), packages, standard.Name + " (generic)");
+                    CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources\\resources-questionnaires"), packages, standard.Name + " (questionnaires)");
+                    CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources\\resources-specific"), packages, standard.Name + " (specific)");
+                    CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources\\minimum"), packages, standard.Name + " (minimum)");
+                    break;
+                case "SelfMeasurements-2-0":
+                    CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources-generic"), packages, standard.Name + " (generic)");
+                    CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources-query-send"), packages, standard.Name + " (query-send)");
+                    CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources-serve-receive"), packages, standard.Name + " (serve-receive)");
                     break;
                 case "BgLZ-3-0":
                     CheckFolder(fileChecker, new DirectoryInfo(standard.FullName + "\\_reference\\resources"), packages, standard.Name);

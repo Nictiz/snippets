@@ -1,7 +1,9 @@
 ﻿using Hl7.Fhir.ElementModel;
+using Hl7.Fhir.Language.Debugging;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Hl7.Fhir.Specification.Source;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CheckDisplayValues
 {
@@ -27,32 +29,56 @@ namespace CheckDisplayValues
         public void CheckFile(FileInfo file, List<string> packageNames)
         {
             this.displayValues = new List<DisplayValue>();
-            if (File.Exists(file.FullName) && file.Name.EndsWith(".xml"))
+
+            if (!File.Exists(file.FullName) || !file.Name.EndsWith(".xml"))
             {
-                string xmlString = System.IO.File.ReadAllText(file.FullName);
-                if (xmlString.Contains("${"))
+                Console.WriteLine($"{file.FullName} was not found or is not an .xml file");
+                throw new FileNotFoundException();
+            }
+
+            string xmlString = System.IO.File.ReadAllText(file.FullName);
+            if (xmlString.Contains("${DATE"))
+            {
+                xmlString = this.ReplaceTDate(xmlString);
+            }
+            if (xmlString.Contains("${"))
+            {
+                xmlString = this.ReplaceEncodings(xmlString);
+            }
+
+            var parser = new FhirXmlParser();
+
+            Resource resource = parser.Parse<Resource>(xmlString);
+
+            if (resource.TypeName == "Bundle") 
+            {
+                Bundle bundle = (Bundle)resource;
+                foreach(Bundle.EntryComponent entry in bundle.Entry)
                 {
-                    xmlString = this.ReplaceTDate(xmlString);
+                    SearchEntry(entry.Resource, file, packageNames);
                 }
+            }
+            else 
+            {
+                SearchEntry(resource, file, packageNames);
+            }
+        }
 
-                var parser = new FhirXmlParser();
+        private void SearchEntry(Resource resource, FileInfo file, List<string> packageNames)
+        {
+            this.element = resource.ToTypedElement();
 
-                Resource resource = parser.Parse<Resource>(xmlString);
+            CheckElement(element);
 
-                this.element = resource.ToTypedElement();
+            //Only search packages and print if the file contains any codes
+            if (this.displayValues.Count > 0 && resource.TypeName != "Binary")
+            {
+                SearchPackages(resource, packageNames);
+                Printer printer = new(file.Name);
 
-                CheckElement(element);
-
-                //Only search packages and print if there the file contains any codes
-                if (this.displayValues.Count > 0)
-                {
-                    SearchPackages(resource, packageNames);
-                    Printer printer = new(file.Name);
-
-                    Tuple<int, int> results = printer.PrintInconsistency(displayValues);
-                    warningCount += results.Item1;
-                    errorCount += results.Item2;
-                }
+                Tuple<int, int> results = printer.PrintInconsistency(displayValues);
+                warningCount += results.Item1;
+                errorCount += results.Item2;
             }
         }
 
@@ -172,7 +198,7 @@ namespace CheckDisplayValues
                     {
                         Language = "nl",
                         Use = "ZiB",
-                        Display = code.Designation.First().Value
+                        Display = code.Display
                     });
                 }
             }
@@ -261,7 +287,7 @@ namespace CheckDisplayValues
         /// <returns></returns>
         private string ReplaceTDate(string xmlString)
         {
-            int firstIndex = xmlString.IndexOf("\"${");
+            int firstIndex = xmlString.IndexOf("\"${DATE");
             int lastIndex = firstIndex + 1;
 
             while (true) 
@@ -273,9 +299,47 @@ namespace CheckDisplayValues
                     string substring = xmlString.Substring(firstIndex, lastIndex - firstIndex);
                     xmlString = xmlString.Replace(substring, "\"2022-01-01");
 
-                    if (xmlString.Contains("\"${"))
+                    if (xmlString.Contains("\"${DATE"))
                     {
                         xmlString = ReplaceTDate(xmlString);
+                    }
+                    break;
+                }
+                else
+                {
+                    lastIndex++;
+                }
+            }
+            return xmlString;
+        }
+        
+        /// <summary>
+        /// Replaces all encodings to make the string parseable
+        /// </summary>
+        /// <param name="xmlString"></param>
+        /// <returns></returns>
+        private string ReplaceEncodings(string xmlString)
+        {
+            int firstIndex = xmlString.IndexOf("\"${");
+            int lastIndex = firstIndex + 1;
+
+            if (firstIndex == -1)
+            {
+                return xmlString;
+            }
+
+            while (true) 
+            {
+                char nextCrar = xmlString[lastIndex];
+
+                if(nextCrar.ToString() == "\"")
+                {
+                    string substring = xmlString.Substring(firstIndex, lastIndex - firstIndex);
+                    xmlString = xmlString.Replace(substring, "\"Encoded");
+
+                    if (xmlString.Contains("\"${"))
+                    {
+                        xmlString = ReplaceEncodings(xmlString);
                     }
                     break;
                 }
