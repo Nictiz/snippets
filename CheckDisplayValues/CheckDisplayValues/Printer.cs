@@ -59,7 +59,7 @@ namespace CheckDisplayValues
                         if (!dutchTranslations.Any(x => x.Display.ToLower() == displayValue.displayCurrent.ToLower()))
                         {
                             PrintMessage(displayValue.displayCurrent
-                                , (dutchTranslations.Find(t => t.Use == "ZiB") ?? dutchTranslations.Find(t => t.Use == "display") ?? dutchTranslations.Find(t => t.Use == "Fully specified name") ?? dutchTranslations.Find(t => t.Use == "Preferred For Language"))?.Display ?? ""
+                                , (dutchTranslations.Find(t => t.Use == "ZiB") ?? dutchTranslations.Find(t => t.Use == "display") ?? dutchTranslations.Find(t => t.Use == "Preferred For Language") ?? dutchTranslations.Find(t => t.Use == "Fully specified name"))?.Display ?? ""
                                 , displayValue.code);
                         }
                     }
@@ -68,7 +68,7 @@ namespace CheckDisplayValues
                         if (!englishTranslations.Any(x => x.Display.ToLower() == displayValue.displayCurrent.ToLower()))
                         {
                             PrintMessage(displayValue.displayCurrent
-                                , (dutchTranslations.Find(t => t.Use == "ZiB") ?? englishTranslations.Find(t => t.Use == "display") ?? englishTranslations.Find(t => t.Use == "Fully specified name") ?? englishTranslations.Find(t => t.Use == "Preferred For Language"))?.Display ?? ""
+                                , (dutchTranslations.Find(t => t.Use == "ZiB") ?? englishTranslations.Find(t => t.Use == "display") ?? englishTranslations.Find(t => t.Use == "Preferred For Language") ?? englishTranslations.Find(t => t.Use == "Fully specified name"))?.Display ?? ""
                                 , displayValue.code);
                         }
                     }
@@ -93,14 +93,14 @@ namespace CheckDisplayValues
         {
             if (this.firstMessage)
             {
-                Console.WriteLine($"{fileName}: ");
+                Console.WriteLine($"\t{fileName}: ");
                 this.firstMessage = false;
             }
 
             if(original == null)
             {
                 PrintWarningError(Printer.WARNING);
-                Console.WriteLine($"Could not find {code}");
+                Console.WriteLine($"\tCould not find {code}");
                 warningCount++;
             }
             else if (original.ToLower() != nts.ToLower())
@@ -130,12 +130,12 @@ namespace CheckDisplayValues
             if (level == Printer.WARNING)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write("\tWARNING: ");
+                Console.Write("\t\tWARNING: ");
             }
             else
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write("\tERROR: ");
+                Console.Write("\t\tERROR: ");
             }
 
             Console.ResetColor();

@@ -194,12 +194,24 @@ namespace CheckDisplayValues
             {
                 if (displayValues.Any(x => x.code == code.Code))
                 {
-                    displayValues.First(x => x.code == code.Code).displayCorrect.Add(new Translation()
+                    if (code.Designation is null || code.Designation.Count == 0)
                     {
-                        Language = "nl",
-                        Use = "ZiB",
-                        Display = code.Display
-                    });
+                        displayValues.First(x => x.code == code.Code).displayCorrect.Add(new Translation()
+                        {
+                            Language = "nl",
+                            Use = "ZiB",
+                            Display = code.Display
+                        });
+                    }
+                    else
+                    {
+                        displayValues.First(x => x.code == code.Code).displayCorrect.Add(new Translation()
+                        {
+                            Language = code.Designation.FirstOrDefault().Language,
+                            Use = "ZiB",
+                            Display = code.Designation.FirstOrDefault().Value
+                        });
+                    }
                 }
             }
         }
