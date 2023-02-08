@@ -14,8 +14,8 @@ namespace CheckDisplayValues
         public int warningCount = 0;
         public int errorCount = 0;
 
-        private List<DisplayValue>? displayValues;
-        private ITypedElement? element;
+        private List<DisplayValue>? _displayValues;
+        private ITypedElement? _element;
 
         public FileChecker(NTS nts)
         {
@@ -28,7 +28,7 @@ namespace CheckDisplayValues
         /// <param name="file"></param>
         public void CheckFile(FileInfo file, List<string> packageNames)
         {
-            this.displayValues = new List<DisplayValue>();
+            _displayValues = new List<DisplayValue>();
 
             if (!File.Exists(file.FullName) || !file.Name.EndsWith(".xml"))
             {
@@ -55,6 +55,7 @@ namespace CheckDisplayValues
                 Bundle bundle = (Bundle)resource;
                 foreach(Bundle.EntryComponent entry in bundle.Entry)
                 {
+                    _displayValues = new List<DisplayValue>();
                     SearchEntry(entry.Resource, file, packageNames);
                 }
             }
@@ -66,17 +67,17 @@ namespace CheckDisplayValues
 
         private void SearchEntry(Resource resource, FileInfo file, List<string> packageNames)
         {
-            this.element = resource.ToTypedElement();
+            _element = resource.ToTypedElement();
 
-            CheckElement(element);
+            CheckElement(_element);
 
             //Only search packages and print if the file contains any codes
-            if (this.displayValues.Count > 0 && resource.TypeName != "Binary")
+            if (_displayValues.Count > 0 && resource.TypeName != "Binary")
             {
                 SearchPackages(resource, packageNames);
                 Printer printer = new(file.Name);
 
-                Tuple<int, int> results = printer.PrintInconsistency(displayValues);
+                Tuple<int, int> results = printer.PrintInconsistency(_displayValues);
                 warningCount += results.Item1;
                 errorCount += results.Item2;
             }
@@ -115,7 +116,7 @@ namespace CheckDisplayValues
                         // If de binding is a ConceptMap
                         else if (component.Binding.ValueSet.HasExtensions())
                         {
-                            ReadConceptMapAsync(component.Binding.ValueSet.Extension.First(), resolver);
+                            ReadConceptMap(component.Binding.ValueSet.Extension.First(), resolver);
                         }
                     }
                 }
@@ -127,7 +128,7 @@ namespace CheckDisplayValues
         /// </summary>
         /// <param name="component"></param>
         /// <param name="resolver"></param>
-        private void ReadConceptMapAsync(Extension component, FhirPackageSource resolver)
+        private void ReadConceptMap(Extension component, FhirPackageSource resolver)
         {
             string valueSetReference = component.Value.First().Value.ToString();
 
@@ -137,12 +138,12 @@ namespace CheckDisplayValues
                 valueSetReference = "http://nictiz.nl/fhir/ConceptMap/InterpretatieVlaggenCodelijst-to-observation-interpretation";
             }
 
-            ConceptMap cm = resolver.ResolveByCanonicalUri(valueSetReference) as ConceptMap;
+            ConceptMap cm = resolver.ResolveByCanonicalUriAsync(valueSetReference).Result as ConceptMap;
 
             // If ConceptMap was not found
             if (cm == null)
             {
-                this.displayValues.Add(new DisplayValue(FileChecker.NOTFOUNDINPACKAGE, valueSetReference, null, null));
+                _displayValues.Add(new DisplayValue(FileChecker.NOTFOUNDINPACKAGE, valueSetReference, null, null));
             }
             else
             {
@@ -150,10 +151,10 @@ namespace CheckDisplayValues
                 foreach (ConceptMap.SourceElementComponent element in cm.Group.First().Element)
                 {
                     // Check if the SourceElementComponent contains any codes which are already in displayValues. We don't want to check codes which aren't used.
-                    if (displayValues.Any(x => x.code == element.Target.First().Code))
+                    if (_displayValues.Any(x => x.code == element.Target.First().Code))
                     {
                         // If a code is used in the file, we add the given translation to displayValues. 
-                        displayValues.First(x => x.code == element.Target.First().Code).displayCorrect.Add(new Translation()
+                        _displayValues.First(x => x.code == element.Target.First().Code).displayCorrect.Add(new Translation()
                         {
                             Language = "nl",
                             Use = "ZiB",
@@ -192,11 +193,11 @@ namespace CheckDisplayValues
         {
             foreach (ValueSet.ConceptReferenceComponent code in externalCodes.Concept)
             {
-                if (displayValues.Any(x => x.code == code.Code))
+                if (_displayValues.Any(x => x.code == code.Code))
                 {
                     if (code.Designation is null || code.Designation.Count == 0)
                     {
-                        displayValues.First(x => x.code == code.Code).displayCorrect.Add(new Translation()
+                        _displayValues.First(x => x.code == code.Code).displayCorrect.Add(new Translation()
                         {
                             Language = "nl",
                             Use = "ZiB",
@@ -205,7 +206,7 @@ namespace CheckDisplayValues
                     }
                     else
                     {
-                        displayValues.First(x => x.code == code.Code).displayCorrect.Add(new Translation()
+                        _displayValues.First(x => x.code == code.Code).displayCorrect.Add(new Translation()
                         {
                             Language = code.Designation.FirstOrDefault().Language,
                             Use = "ZiB",
@@ -258,7 +259,7 @@ namespace CheckDisplayValues
                 var code = codeableconcept.Coding.Find(c => c.System == "http://snomed.info/sct" || c.System == "http://loinc.org");
                 if (code != null)
                 {
-                    displayValues?.Add(new DisplayValue(code.System, code.Code, code.Display, nts.GetDisplayListValue(code.Code, code.System)));
+                    _displayValues?.Add(new DisplayValue(code.System, code.Code, code.Display, nts.GetDisplayListValue(code.Code, code.System)));
                 }
             }
             else if (element.InstanceType == "Coding")
@@ -266,7 +267,7 @@ namespace CheckDisplayValues
                 Coding coding = (Coding)element.ToPoco();
                 if (coding.System == "http://snomed.info/sct" || coding.System == "http://loinc.org")
                 {
-                    displayValues?.Add(new DisplayValue(coding.System, coding.Code, coding.Display, nts.GetDisplayListValue(coding.Code, coding.System)));
+                    _displayValues?.Add(new DisplayValue(coding.System, coding.Code, coding.Display, nts.GetDisplayListValue(coding.Code, coding.System)));
                 }
             }
             else if (element.InstanceType == "code")
@@ -278,7 +279,7 @@ namespace CheckDisplayValues
                     var subCode = codeableconcept?.Coding.Find(c => c.System == "http://snomed.info/sct" || c.System == "http://loinc.org");
                     if (subCode != null)
                     {
-                        displayValues?.Add(new DisplayValue(subCode.System, subCode.Code, subCode.Display, nts.GetDisplayListValue(subCode.Code, subCode.System)));
+                        _displayValues?.Add(new DisplayValue(subCode.System, subCode.Code, subCode.Display, nts.GetDisplayListValue(subCode.Code, subCode.System)));
                     }
                 }
                 else

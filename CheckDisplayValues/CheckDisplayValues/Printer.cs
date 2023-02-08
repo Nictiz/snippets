@@ -59,7 +59,7 @@ namespace CheckDisplayValues
                         if (!dutchTranslations.Any(x => x.Display.ToLower() == displayValue.displayCurrent.ToLower()))
                         {
                             PrintMessage(displayValue.displayCurrent
-                                , (dutchTranslations.Find(t => t.Use == "ZiB") ?? dutchTranslations.Find(t => t.Use == "display") ?? dutchTranslations.Find(t => t.Use == "Preferred For Language") ?? dutchTranslations.Find(t => t.Use == "Fully specified name"))?.Display ?? ""
+                                , (dutchTranslations.Find(t => t.Use == "ZiB") ?? dutchTranslations.Find(t => t.Use == "Preferred For Language") ?? dutchTranslations.Find(t => t.Use == "display")  ?? dutchTranslations.Find(t => t.Use == "Fully specified name"))?.Display ?? ""
                                 , displayValue.code);
                         }
                     }
@@ -68,7 +68,7 @@ namespace CheckDisplayValues
                         if (!englishTranslations.Any(x => x.Display.ToLower() == displayValue.displayCurrent.ToLower()))
                         {
                             PrintMessage(displayValue.displayCurrent
-                                , (dutchTranslations.Find(t => t.Use == "ZiB") ?? englishTranslations.Find(t => t.Use == "display") ?? englishTranslations.Find(t => t.Use == "Preferred For Language") ?? englishTranslations.Find(t => t.Use == "Fully specified name"))?.Display ?? ""
+                                , (dutchTranslations.Find(t => t.Use == "ZiB") ?? englishTranslations.Find(t => t.Use == "Preferred For Language") ?? englishTranslations.Find(t => t.Use == "display")  ?? englishTranslations.Find(t => t.Use == "Fully specified name"))?.Display ?? ""
                                 , displayValue.code);
                         }
                     }
@@ -100,7 +100,7 @@ namespace CheckDisplayValues
             if(original == null)
             {
                 PrintWarningError(Printer.WARNING);
-                Console.WriteLine($"\tCould not find {code}");
+                Console.WriteLine($"Display value for: \"{code}\" is missing");
                 warningCount++;
             }
             else if (original.ToLower() != nts.ToLower())
@@ -108,7 +108,7 @@ namespace CheckDisplayValues
                 if (nts.Equals(""))
                 {
                     PrintWarningError(Printer.WARNING);
-                    Console.Write($"No translation available for code \"{code}\", please check manually");
+                    Console.Write($"No translation available for code \"{code}\", please check manually. Current translation is: \"{original}\"");
                     warningCount++;
                 }
                 else

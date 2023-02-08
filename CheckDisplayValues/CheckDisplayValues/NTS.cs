@@ -101,7 +101,7 @@ namespace CheckDisplayValues
                 totalSNOMEDLookups++;
 
             // By checking if we allready searched for this specific code, we don't have to do the entire lookup again.
-            DisplayValue? displayValue = _displayValues.FirstOrDefault(x => x.code == code);
+            DisplayValue? displayValue = _displayValues.SingleOrDefault(x => x.code == code);
             if(displayValue != null)
             {
                 if(system == "http://snomed.info/sct")
