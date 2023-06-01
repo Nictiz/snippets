@@ -97,6 +97,8 @@ class Launcher:
             for textarea in browser.forms[0].xpath("//textarea"):
                 if textarea.name.endswith(f"variableSetups.variableSetupMap[{variable}]"):
                     fv(1, textarea.name, variables[variable])
+                else: # Workaround: twill seems to add a linebreak before the content of a textarea, which confuses Touchstone. So we need to remove it.
+                    textarea.value = textarea.value.strip()
         
         submit("execute")
         if browser.code == 200:
@@ -125,12 +127,18 @@ class Launcher:
         launcher.execute("FHIR4-0-1-MedMij-Cert/_LoadResources", self.TOUCHSTONE, self.WF_4, ignore_loadscript = False)
         launcher.execute("FHIR4-0-1-Test/_LoadResources", self.TOUCHSTONE, self.WF_4_NO_AUTH, ignore_loadscript = False)
 
+    def launchSample(self):
+        #launcher.execute("FHIR3-0-2-MM201901-Test/Medication-9-0-7/XIS-Server", self.TOUCHSTONE, self.WF_201901)
+        #launcher.execute("FHIR3-0-2-MM202001-Cert/GGZ-2-0", self.TOUCHSTONE, self.WF_202001)
+        launcher.execute("FHIR3-0-2-MM202001-Test/SelfMeasurements-2-0", self.TOUCHSTONE, self.WF_202001)
+
 if __name__ == "__main__":
     try:
         launcher = Launcher("2023-05-29")
         launcher.login()
 
-        launcher.launchLoadScripts()
+        #launcher.launchLoadScripts()
+        launcher.launchSample()
 
         # launcher.execute("dev/FHIR3-0-2-MM201901-Test/Medication-9-0-7-test", "AEGIS.net, Inc. - TouchstoneFHIR", "Nictiz - Nictiz WildFHIR V201901-2 Dev - FHIR 3.0.2", {"T": "2023-05-22"})
         # launcher.execute("FHIR3-0-2-MM202002-Test/BgLZ-3-0", "AEGIS.net, Inc. - TouchstoneFHIR", "Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2", {})
