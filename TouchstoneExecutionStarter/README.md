@@ -18,6 +18,7 @@ Once defined, you can list all known targets using:
 
 And you can execute one or more targets by listing them on the command line, either using their mnemonic names or their numbers as shown in the `--list` output, e.g.:
 > python script.py 3 6 dev.eOverdracht4.Cert
+> 
 will launch the targets defined by index number 3, index number 6, and mnemonic "dev.eOvderdrach4.Cert".
 
 The script does not:
