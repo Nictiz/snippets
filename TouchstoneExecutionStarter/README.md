@@ -11,7 +11,16 @@ Prerequisites:
     * TS_USER: The username of the Touchstone user
     * TS_PASS: The password of the Touchstone user
 
-Using the `execute()` method of the Launcher class, the user can create and start new test executions based on the scripts in the folder with the origin, destination and parameters supplied. Loadscripts will be excluded. The script does not:
+To launch a particular folder, it has to be defined as an instance of the `Target` class, which encapsulates all necessary metadata (origin, destination, parameters). Several folders are already defined in the script. If a folder is absent, you can add them to the `TARGETS` dict of the `Launcher` class with a mnemonic key that makes it easy recognizable (and typeable)/
+
+Once defined, you can list all known targets using:
+> python script.py --list
+
+And you can execute one or more targets by listing them on the command line, either using their mnemonic names or their numbers as shown in the `--list` output, e.g.:
+> python script.py 3 6 dev.eOverdracht4.Cert
+will launch the targets defined by index number 3, index number 6, and mnemonic "dev.eOvderdrach4.Cert".
+
+The script does not:
 * Take care of uploading materials to Touchstone.
 * Report back results of the execution. It merely provides the URL where the running test execution can be found.
 
