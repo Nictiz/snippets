@@ -78,7 +78,7 @@ class Launcher:
     TARGETS["MedMij6.Cert.LoadResources"] = Target("FHIR4-0-1-MedMij-Cert/_LoadResources", TOUCHSTONE, WF_4, is_loadscript_folder = True)
     TARGETS["FHIR4.Test.LoadResources"] = Target("FHIR4-0-1-Test/_LoadResources", TOUCHSTONE, WF_4_NO_AUTH, is_loadscript_folder = True)
 
-    TARGETS["LoadResource"] = [
+    TARGETS["LoadResources"] = [
         "MM2019.01.Test.LoadResources",
         "MM2019.01.Cert.LoadResources",
         "MM2020.01.Test.LoadResources",
@@ -112,10 +112,33 @@ class Launcher:
         if "Sign Out" not in browser.html:
             sys.exit("Couldn't login into Touchstone")
 
+    def printTargets(self):
+        """ Print out all defined targets with their index number. If a target is a collection of other targets, they will be printed in parentheses. """
+        names = list(self.TARGETS.keys())
+        for i in range(len(names)):
+            line = "%2d" % (i + 1)
+            name = names[i]
+            line += ".  " + name
+
+            if type(self.TARGETS[name]) == list:
+                subtargets = [t for t in self.TARGETS[name] if type(t) == str]
+                if len(subtargets) > 0:
+                    line += " (" + ", ".join(subtargets) + ")"
+            print(line)
+
     def execute(self, *targets):
         """ Execute one or more targets. """
         for target in targets:
             if type(target) == str:
+                try:
+                    # See if we have an index rather than a mnemonic
+                    index = int(target)
+                    target = list(self.TARGETS.keys())[index - 1]
+                except ValueError:
+                    # Target wasn't a number
+                    pass
+                except IndexError:
+                    self.results.append(f"Unknown target number '{index}")
                 if not target in self.TARGETS:
                     self.results.append(f"Unknown target '{target}'")
                 else:
@@ -203,18 +226,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--list", help = "List all available targets", action = "store_true")
     parser.add_argument("-T", help = f"Date T to use (default is '{launcher.date_T}')")
-    parser.add_argument("target", nargs = "*")
+    parser.add_argument("target", nargs = "*", help = "The targets to execute (both numbers and mnemonics are supported)")
     args = parser.parse_args()
 
     if args.T != None:
         launcher.date_T = args.T
 
     if args.list:
-        for target in launcher.TARGETS.keys():
-            print(f"- {target}")
+        launcher.printTargets()
         exit(0)
 
-    if len(args.target) == 0:
+    elif len(args.target) == 0:
         print("You need to specify at least one target (use --list to show the available targets)")
         exit(1)
     try:
