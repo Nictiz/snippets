@@ -40,8 +40,16 @@ class Launcher:
     # --- Define all targets that we know. ---
     TARGETS = {}
 
+    TARGETS["dev.Questionnaires2.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test/Questionnaires-2-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.Questionnaires2.Test.PHR"] = Target("dev/FHIR3-0-2-MM202001-Test/Questionnaires-2-0/PHR-Client", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.Questionnaires2.Test.XIS"] = Target("dev/FHIR3-0-2-MM202001-Test/Questionnaires-2-0/XIS-Server-Nictiz-intern", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.BgLZ3.Test"] = Target("dev/FHIR3-0-2-MM202002-Test/BgLZ-3-0", TOUCHSTONE, WF_202001_DEV)
+
+    TARGETS["dev.MM2020.01.Test.LoadResources"] = [
+        "dev.Questionnaires2.Test.LoadResources",
+    ]
+
     TARGETS["dev.Medication-907.Test"] = Target("dev/FHIR3-0-2-MM201901-Test/Medication-9-0-7-test", TOUCHSTONE, WF_201901_DEV)
-    TARGETS["dev.BgLZ3.Test"] = Target("FHIR3-0-2-MM202002-Test/BgLZ-3-0", TOUCHSTONE, WF_202001_DEV)
     TARGETS["dev.MP9.3.Test"] = [
         Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/PrescrProcessing/Receive", TOUCHSTONE, WF_4_NO_AUTH_DEV),
         Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/PrescrProcessing/Send-Nictiz-intern", TOUCHSTONE, WF_4_NO_AUTH_DEV),
