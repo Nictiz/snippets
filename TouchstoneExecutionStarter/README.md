@@ -6,7 +6,7 @@ Prerequisites:
 * TestScripts and fixtures have been uploaded to the proper folders, with the proper validation environment set.
 * The folders paths _exactly_ match the paths defined in the scripts.
 * Python 3 is installed.
-* The [twill](https://twill-tools.github.io/twill/) Python module is present.
+* The [mechanicalsoup](https://pypi.org/project/MechanicalSoup/) Python module is present.
 * The following environment variables are set (this method is chosen to prevent that the password is accidentally written down i nthe script and then committed):
     * TS_USER: The username of the Touchstone user
     * TS_PASS: The password of the Touchstone user

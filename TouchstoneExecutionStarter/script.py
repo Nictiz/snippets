@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-from twill import browser
-from twill.commands import *
 import argparse
 import datetime
+import mechanicalsoup
 import os
 import sys
 
@@ -106,19 +105,25 @@ class Launcher:
         monday = datetime.date.today() - datetime.timedelta(days = datetime.date.today().weekday())
         self.date_T = monday.strftime("%Y-%m-%d")
 
+        self.browser = mechanicalsoup.StatefulBrowser()
+
     def login(self):
         """ Login to the Touchstone website. It requires the environment variables TS_USER and TS_PASS to be set. """
-        go('https://touchstone.aegis.net/touchstone/login')
+        self.browser.open("https://touchstone.aegis.net/touchstone/login")
 
+        self.browser.select_form('form[id="loginForm"]')
         try:
-            formvalue("1", "emailOrLoginID", os.environ["TS_USER"])
-            formvalue("1", "password", os.environ["TS_PASS"])
+            self.browser["emailOrLoginID"] = os.environ["TS_USER"]
+            self.browser["password"] = os.environ["TS_PASS"]
         except KeyError:
             sys.exit("Set the environment variables 'TS_USER' and 'TS_PASS' to login to Touchstone")
 
-        submit()
-        if "Sign Out" not in browser.html:
+        response = self.browser.submit_selected()
+        if "Sign Out" not in response.text:
             sys.exit("Couldn't login into Touchstone")
+
+    def logout(self):
+        self.browser.open("https://touchstone.aegis.net/touchstone/logout")
 
     def printTargets(self):
         """ Print out all defined targets with their index number. If a target is a collection of other targets, they will be printed in parentheses. """
@@ -162,18 +167,20 @@ class Launcher:
         print(f"====================== Setting up {target.rel_path} =========================")
 
         # Navigate to the relevant target and select all testscripts that are not loadscripts
-        go(f"https://touchstone.aegis.net/touchstone/testdefinitions?selectedTestGrp=/FHIRSandbox/Nictiz/{target.rel_path}&activeOnly=true&contentEntry=TEST_SCRIPTS&ps=200")
+        self.browser.open(f"https://touchstone.aegis.net/touchstone/testdefinitions?selectedTestGrp=/FHIRSandbox/Nictiz/{target.rel_path}&activeOnly=true&contentEntry=TEST_SCRIPTS&ps=200")
         select_all = True
-        for input in browser.forms[4].inputs:
-            if input.name == "selectedTestScripts": # This explicit check is needed because inputs["selectedTestScripts"] will not always yield the right results
-                if "load-resources-purgecreateupdate" in input.attrib["value"] and not target.is_loadscript_folder:
-                    select_all = False
-                else:                
-                    input.value = input.attrib["value"]
-        fv(5, "allSelected", "on" if select_all else "off")
+        self.browser.select_form('form[id="testDefSearch"]')
+        selected_testscripts = []
+        for input in self.browser.page.find_all("input", "selectedId"):
+            if "load-resources-purgecreateupdate" in input.attrs["value"] and not target.is_loadscript_folder:
+                select_all = False
+            else:                
+                selected_testscripts.append(input.attrs["value"])
+        self.browser["selectedTestScripts"] = selected_testscripts
+        self.browser["allSelected"] = True if select_all else False
 
         # Submit the form
-        submit("setupSelected")
+        self.browser.submit_selected()
         
         # Select the origin based on its name
         self._selectOrigDest("origin", target.origins)
@@ -182,20 +189,23 @@ class Launcher:
         self._selectOrigDest("dest", target.destinations)
 
         # Populate all variables
+        self.browser.select_form('form[id="testSetupForm"]')
         if target.params == None:
             target.params = {"T": self.date_T}
         elif "T" not in target.params:
             target.params["T"] = self.date_T
         for param in target.params:
-            for textarea in browser.forms[0].xpath("//textarea"):
-                if textarea.name.endswith(f"variableSetups.variableSetupMap[{param}]"):
-                    fv(1, textarea.name, target.params[param])
-                else: # Workaround: twill seems to add a linebreak before the content of a textarea, which confuses Touchstone. So we need to remove it.
-                    textarea.value = textarea.value.strip()
+            for textarea in self.browser.page.find_all("textarea"): # The name attribute of the targetted textarea is very long and I'm not sure if the beginning is guaranteed to be stable, so we're using a search on all textarea's here and filter out based on the latter part of the name
+                if textarea.attrs["name"].endswith(f"variableSetups.variableSetupMap[{param}]"):
+                    self.browser[textarea.attrs["name"]] = target.params[param].strip()
+
+        # The submission expects a field called "execute", which is normally sent when clicking the "execute" button.
+        # However, for some reason this field is not included when programmatically doing this.
+        self.browser.form.set("execute", "", True)
         
-        submit("execute")
-        if browser.code == 200:
-            self.results.append(f"{target.rel_path} execution started on {browser.url}")
+        response = self.browser.submit_selected()
+        if response.status_code == 200:
+            self.results.append(f"{target.rel_path} execution started on {self.browser.url}")
         else:
             self.results.append(f"Couldn't start execution for {target.rel_path}")
 
@@ -204,20 +214,18 @@ class Launcher:
             * type: "origin" or "dest"
             * values: A list of origins or destinations to select.
         """
+        self.browser.select_form('form[id="testSetupForm"]')
+
         for i in range(len(values)):
             if i == 0:
                 dropdown_ids = [f"main{type.lower()}1TsSelect", f"single{type.capitalize()}TsSelect"] # If a origin/destination is explicitly defined in the TestScript, the select box has a different id then when it is absent
             else:
                 dropdown_ids = [f"main{type.lower()}{i + 1}TsSelect"]
+
             for id in dropdown_ids:
-                dropdowns = browser.forms[0].xpath(f"//select[@id='{id}']")
+                dropdowns = self.browser.page.find_all("select", id=id)
                 if len(dropdowns) > 0:
-                    options = dropdowns[0].xpath(f"option[text()='{values[i]}']")
-                    if len(options) == 1:
-                        fv(1, id, options[0].attrib["value"])
-                    else:
-                        print(f"Couldn't select {type.lower()} '{values[i]}'")
-                        return
+                    self.browser[dropdowns[0].attrs["name"]] = values[i]
 
     def printResults(self):
         print()
@@ -255,4 +263,4 @@ if __name__ == "__main__":
 
     finally:
         # Always try to logout, otherwise we'll have too many open sessions.
-        go("https://touchstone.aegis.net/touchstone/logout")
+        launcher.logout()
