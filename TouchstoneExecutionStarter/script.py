@@ -2,9 +2,11 @@
 
 import argparse
 import datetime
+import requests
 import mechanicalsoup
 import os
 import sys
+import time
 
 class Target:
     """
@@ -101,30 +103,43 @@ class Launcher:
 
     def __init__(self):
         self.results = []
+        self.wait_loadscript = True
 
         # Default to this monday
         monday = datetime.date.today() - datetime.timedelta(days = datetime.date.today().weekday())
         self.date_T = monday.strftime("%Y-%m-%d")
 
-        self.browser = mechanicalsoup.StatefulBrowser()
+        if not ("TS_USER"  in os.environ and "TS_PASS" in os.environ):
+            sys.exit("Set the environment variables 'TS_USER' and 'TS_PASS' to login to Touchstone")
 
-    def login(self):
+        self.browser = mechanicalsoup.StatefulBrowser()
+        self.__api_key = None
+
+    def loginFrontend(self):
         """ Login to the Touchstone website. It requires the environment variables TS_USER and TS_PASS to be set. """
         self.browser.open("https://touchstone.aegis.net/touchstone/login")
 
         self.browser.select_form('form[id="loginForm"]')
-        try:
-            self.browser["emailOrLoginID"] = os.environ["TS_USER"]
-            self.browser["password"] = os.environ["TS_PASS"]
-        except KeyError:
-            sys.exit("Set the environment variables 'TS_USER' and 'TS_PASS' to login to Touchstone")
-
+        self.browser["emailOrLoginID"] = os.environ["TS_USER"]
+        self.browser["password"] = os.environ["TS_PASS"]
         response = self.browser.submit_selected()
         if "Sign Out" not in response.text:
             sys.exit("Couldn't login into Touchstone")
 
-    def logout(self):
+    def logoutFrontend(self):
         self.browser.open("https://touchstone.aegis.net/touchstone/logout")
+
+    def apiKey(self):
+        if self.__api_key == None:
+            body = {
+                "email": os.environ["TS_USER"],
+                "password": os.environ["TS_PASS"]
+            }
+            response = requests.post("https://touchstone.aegis.net/touchstone/api/authenticate", json=body)
+            if response.status_code != 201 or "API-Key" not in response.json():
+                sys.exit("Couldn't login into the Touchstone API")
+            self.__api_key = response.json()["API-Key"]
+        return self.__api_key
 
     def printTargets(self):
         """ Print out all defined targets with their index number. If a target is a collection of other targets, they will be printed in parentheses. """
@@ -210,6 +225,33 @@ class Launcher:
         else:
             self.results.append(f"Couldn't start execution for {target.rel_path}")
 
+        if target.is_loadscript_folder and self.wait_loadscript:
+            self._waitUntilComplete()
+
+    def _waitUntilComplete(self):
+        """ Stall until the test execution has completed. """
+        
+        print(f"Started execution on {self.browser.url}, waiting until it's complete before continuing")
+        sys.stdout.write("Running ")
+    
+        execution_id = self.browser.url.replace("https://touchstone.aegis.net/touchstone/execution?exec=", "")
+        running = True
+        while running:
+            response = requests.get("https://touchstone.aegis.net/touchstone/api/testExecution/" + execution_id, headers = {
+                "API-Key": self.apiKey(),
+                "Accept": "application/json"
+            })
+            if response.status_code != 200 or "status" not in response.json():
+                print("Couldn't retrieve execution status, continuing")
+                running = False
+            elif response.json()["status"] == "Running":
+                sys.stdout.write(".")
+                sys.stdout.flush()
+                time.sleep(5)
+            else:
+                print(" done")
+                running = False
+
     def _selectOrigDest(self, type, values):
         """ Select origin or destination dropdowns on the Touchstone UI during execution setup.
             * type: "origin" or "dest"
@@ -243,11 +285,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--list", help = "List all available targets", action = "store_true")
     parser.add_argument("-T", help = f"Date T to use (default is '{launcher.date_T}')")
+    parser.add_argument("--nowait-loadscript", action = "store_true", help = "When executing loadscripts, don't wait until it has completed before continuing (default is to wait)")
     parser.add_argument("target", nargs = "*", help = "The targets to execute (both numbers and mnemonics are supported)")
     args = parser.parse_args()
 
     if args.T != None:
         launcher.date_T = args.T
+    launcher.wait_loadscript = not args.nowait_loadscript
 
     if args.list:
         launcher.printTargets()
@@ -257,11 +301,11 @@ if __name__ == "__main__":
         print("You need to specify at least one target (use --list to show the available targets)")
         exit(1)
     try:
-        launcher.login()
+        launcher.loginFrontend()
         launcher.execute(*args.target)
 
         launcher.printResults()
 
     finally:
         # Always try to logout, otherwise we'll have too many open sessions.
-        launcher.logout()
+        launcher.logoutFrontend()
