@@ -20,13 +20,16 @@ class Target:
     * params: An optional dict of TestScript variables that can be filled out during execution setup. The
               "date T" variable will automatically be included, unless it is explicitly defined in variables.
     * is_loadscript_folder: Flag to indicate if loadscripts should be included in the test setup.
+    * block_until_complete: Flag to indicate that the script should block until exectution has completed for this
+                            target (this is the default behaviour for loadscript targets).
     """
-    def __init__(self, rel_path, origins, destinations, params = None, is_loadscript_folder = False):
+    def __init__(self, rel_path, origins, destinations, params = None, is_loadscript_folder = False, block_until_complete = None):
         self.rel_path             = rel_path
         self.origins              = origins if type(origins) == list else [origins]
         self.destinations         = destinations if type(destinations) == list else [destinations]
         self.params               = params
         self.is_loadscript_folder = is_loadscript_folder
+        self.block_until_complete = True if is_loadscript_folder else block_until_complete
 
 class Launcher:
     TOUCHSTONE       = "AEGIS.net, Inc. - TouchstoneFHIR"
@@ -42,8 +45,8 @@ class Launcher:
     TARGETS = {}
 
     TARGETS["dev.Questionnaires2.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test/Questionnaires-2-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
-    TARGETS["dev.Questionnaires2.Test.PHR"] = Target("dev/FHIR3-0-2-MM202001-Test/Questionnaires-2-0/PHR-Client", TOUCHSTONE, WF_202001_DEV)
-    TARGETS["dev.Questionnaires2.Test.XIS"] = Target("dev/FHIR3-0-2-MM202001-Test/Questionnaires-2-0/XIS-Server-Nictiz-intern", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.Questionnaires2.Test.PHR"] = Target("dev/FHIR3-0-2-MM202001-Test/Questionnaires-2-0/PHR-Client", TOUCHSTONE, WF_202001_DEV, block_until_complete=True)
+    TARGETS["dev.Questionnaires2.Test.XIS"] = Target("dev/FHIR3-0-2-MM202001-Test/Questionnaires-2-0/XIS-Server-Nictiz-intern", TOUCHSTONE, WF_202001_DEV, block_until_complete=True)
     TARGETS["dev.BgLZ3.Test"] = Target("dev/FHIR3-0-2-MM202002-Test/BgLZ-3-0", TOUCHSTONE, WF_202001_DEV)
 
     TARGETS["dev.MM2020.01.Test.LoadResources"] = [
@@ -103,7 +106,6 @@ class Launcher:
 
     def __init__(self):
         self.results = []
-        self.wait_loadscript = True
 
         # Default to this monday
         monday = datetime.date.today() - datetime.timedelta(days = datetime.date.today().weekday())
@@ -225,12 +227,12 @@ class Launcher:
         else:
             self.results.append(f"Couldn't start execution for {target.rel_path}")
 
-        if target.is_loadscript_folder and self.wait_loadscript:
-            self._waitUntilComplete()
+        if target.block_until_complete:
+            self._blockUntilComplete()
 
-    def _waitUntilComplete(self):
+    def _blockUntilComplete(self):
         """ Stall until the test execution has completed. """
-        
+
         print(f"Started execution on {self.browser.url}, waiting until it's complete before continuing")
         sys.stdout.write("Running ")
     
@@ -285,13 +287,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--list", help = "List all available targets", action = "store_true")
     parser.add_argument("-T", help = f"Date T to use (default is '{launcher.date_T}')")
-    parser.add_argument("--nowait-loadscript", action = "store_true", help = "When executing loadscripts, don't wait until it has completed before continuing (default is to wait)")
     parser.add_argument("target", nargs = "*", help = "The targets to execute (both numbers and mnemonics are supported)")
     args = parser.parse_args()
 
     if args.T != None:
         launcher.date_T = args.T
-    launcher.wait_loadscript = not args.nowait_loadscript
 
     if args.list:
         launcher.printTargets()
