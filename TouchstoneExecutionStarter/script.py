@@ -80,6 +80,7 @@ class Launcher:
     TARGETS["MM2020.01.Cert.LoadResources"] = Target("FHIR3-0-2-MM202001-Cert/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
     TARGETS["MM2020.02.Test.LoadResources"] = Target("FHIR3-0-2-MM202002-Test/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
     TARGETS["MM2020.02.Cert.LoadResources"] = Target("FHIR3-0-2-MM202002-Cert/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
+    TARGETS["eOverdracht.LoadResources"] = Target("FHIR3-0-2-eOverdracht4-0/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
     
     TARGETS["MedMij6.Test.LoadResources"] = Target("FHIR4-0-1-MedMij-Test/_LoadResources", TOUCHSTONE, WF_4, is_loadscript_folder = True)
     TARGETS["MedMij6.Cert.LoadResources"] = Target("FHIR4-0-1-MedMij-Cert/_LoadResources", TOUCHSTONE, WF_4, is_loadscript_folder = True)
