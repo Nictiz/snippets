@@ -43,6 +43,7 @@ class Launcher:
     WF_202001_DEV    = "Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2"
     WF_4             = "Nictiz - R4 MedMij - FHIR 4.0.1"
     WF_4_NO_AUTH     = "Nictiz - R4 (NoAuth) - FHIR 4.0.1"
+    WF_4_DEV         = "Nictiz - R4 MedMij (Dev) - FHIR 4.0.1"
     WF_4_NO_AUTH_DEV = "Nictiz - R4 (NoAuth) (Dev) - FHIR 4.0.1"
 
     # --- Define all targets that we know. ---
@@ -81,7 +82,7 @@ class Launcher:
     TARGETS["dev.SelfMeasurements2.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test/SelfMeasurements-2-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
     TARGETS["dev.SelfMeasurements2.Test.XIS"] = Target("dev/FHIR3-0-2-MM202001-Test/SelfMeasurements-2-0/XIS-Server", TOUCHSTONE, WF_202001_DEV)
     TARGETS["dev.SelfMeasurements2.Cert.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Cert/SelfMeasurements-2-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
-    TARGETS["dev.SelfMeasurements2.Cert.XIS"] = Target("dev/FHIR3-0-2-MM202001-Cert/SelfMeasurements-2-0/XIS-Server", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.SelfMeasurements2.Cert"] = Target("dev/FHIR3-0-2-MM202001-Cert/SelfMeasurements-2-0", TOUCHSTONE, WF_202001_DEV)
     TARGETS["dev.eAppointment2.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test/eAppointment-2-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
     TARGETS["dev.eAppointment2.Test"] = Target("dev/FHIR3-0-2-MM202001-Test/eAppointment-2-0", TOUCHSTONE, WF_202001_DEV)
     TARGETS["dev.MM2020.01.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
@@ -126,8 +127,27 @@ class Launcher:
     TARGETS["dev.Geboortezorg.LoadResources"] = Target("FHIR3-0-2-Geboortezorg/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
     TARGETS["dev.Geboortezorg"] = Target("FHIR3-0-2-Geboortezorg/Zwangerschapskaart", TOUCHSTONE, WF_202001_DEV)
     
+    TARGETS["MedMij 6 -- dev"] = Header()
+    TARGETS["dev.MM6.Test.LoadResources"] = Target("FHIR4-0-1-MedMij-Test/_LoadResources", TOUCHSTONE, WF_4_DEV, is_loadscript_folder = True)
+    TARGETS["dev.MM6.Cert.LoadResources"] = Target("FHIR4-0-1-MedMij-Cert/_LoadResources", TOUCHSTONE, WF_4_DEV, is_loadscript_folder = True)
+    TARGETS["dev.Immunization.1.Test.PHR"] = Target("FHIR4-0-1-MedMij-Test/Immunization-1-0/PHR-Client", TOUCHSTONE, WF_4_DEV)
+    TARGETS["dev.Immunization.1.Test.XIS-Server-GetMedication"] = Target("FHIR4-0-1-MedMij-Test/Immunization-1-0/XIS-Server-GetMedication", TOUCHSTONE, WF_4_DEV)
+    TARGETS["dev.Immunization.1.Cert.PHR"] = Target("FHIR4-0-1-MedMij-Test/Immunization-1-0/PHR-Client", TOUCHSTONE, WF_4_DEV)
+    TARGETS["dev.Immunization.1.Cert.XIS-Server-GetMedication"] = Target("FHIR4-0-1-MedMij-Test/Immunization-1-0/XIS-Server-GetMedication", TOUCHSTONE, WF_4_DEV)
+    TARGETS["dev.MP9.3.Test.MedicationData.Retrieve-MedMij"] = Target("FHIR4-0-1-MedMij-Test/MP9-3-0-0-beta/MedicationData/Retrieve-MedMij", TOUCHSTONE, WF_4_DEV)
+    TARGETS["dev.MP9.3.Test.MedicationData.Serve-MedMij"] = Target("FHIR4-0-1-MedMij-Test/MP9-3-0-0-beta/MedicationData/Serve-MedMij", TOUCHSTONE, WF_4_DEV)
+    TARGETS["dev.PatientCorrections.1.Test"] = Target("FHIR4-0-1-MedMij-Test/PatientCorrections-1-0", TOUCHSTONE, WF_4_DEV)
+
     TARGETS["FHIR 4 -- dev"] = Header()
+    TARGETS["dev.FHIR4.Test.LoadResources"] = Target("FHIR4-0-1-Test/_LoadResources", TOUCHSTONE, WF_4_NO_AUTH_DEV, is_loadscript_folder = True)
+    TARGETS["dev.FHIR4.Lab.3.Test"] = Target("FHIR4-0-1-Test/LaboratoryResults-3-0", TOUCHSTONE, WF_4_NO_AUTH_DEV)
     TARGETS["dev.MP9.3.Test"] = [
+        Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/MedicationData/Receive", TOUCHSTONE, WF_4_NO_AUTH_DEV),
+        Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/MedicationData/Retrieve", TOUCHSTONE, WF_4_NO_AUTH_DEV),
+        Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/MedicationData/Send-Nictiz-intern", TOUCHSTONE, WF_4_NO_AUTH_DEV),
+        Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/MedicationData/Serve", TOUCHSTONE, WF_4_NO_AUTH_DEV),
+        Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/MedicationPrescription/Receive", TOUCHSTONE, WF_4_NO_AUTH_DEV),
+        Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/MedicationPrescription/Send-Nictiz-intern", TOUCHSTONE, WF_4_NO_AUTH_DEV),
         Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/PrescrProcessing/Receive", TOUCHSTONE, WF_4_NO_AUTH_DEV),
         Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/PrescrProcessing/Send-Nictiz-intern", TOUCHSTONE, WF_4_NO_AUTH_DEV),
         Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/ProposalMA/Receive", TOUCHSTONE, WF_4_NO_AUTH_DEV),
