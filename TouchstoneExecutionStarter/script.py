@@ -288,6 +288,13 @@ class Launcher:
                 if textarea.attrs["name"].endswith(f"variableSetups.variableSetupMap[{param}]"):
                     self.browser[textarea.attrs["name"]] = target.params[param].strip()
 
+
+        # There's a subtle bug between Touchstone and scripting (happened also with the Twill library) where a newline
+        # is added to textareas on load (which is then used repeated back in the default value on a new execution, and
+        # a newline is added to it, and so forth). So we need to go over all textareas and strip the whitespace.
+        for textarea in self.browser.page.find_all("textarea"):
+            self.browser[textarea.attrs["name"]] = textarea.text.strip()
+
         # The submission expects a field called "execute", which is normally sent when clicking the "execute" button.
         # However, for some reason this field is not included when programmatically doing this.
         self.browser.form.set("execute", "", True)
