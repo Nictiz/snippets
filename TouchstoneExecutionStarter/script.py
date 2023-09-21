@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import collections
 import datetime
 import requests
 import mechanicalsoup
@@ -31,29 +32,101 @@ class Target:
         self.is_loadscript_folder = is_loadscript_folder
         self.block_until_complete = True if is_loadscript_folder else block_until_complete
 
+class Header:
+    pass
+
 class Launcher:
     TOUCHSTONE       = "AEGIS.net, Inc. - TouchstoneFHIR"
     WF_201901        = "Nictiz - Nictiz WildFHIR V201901 - FHIR 3.0.2"
     WF_202001        = "Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2"
-    WF_201901_DEV    = "Nictiz - Nictiz WildFHIR V201901-Dev - FHIR 3.0.2"
+    WF_201901_DEV    = "Nictiz - Nictiz WildFHIR V201901-2 Dev - FHIR 3.0.2"
     WF_202001_DEV    = "Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2"
     WF_4             = "Nictiz - R4 MedMij - FHIR 4.0.1"
     WF_4_NO_AUTH     = "Nictiz - R4 (NoAuth) - FHIR 4.0.1"
     WF_4_NO_AUTH_DEV = "Nictiz - R4 (NoAuth) (Dev) - FHIR 4.0.1"
 
     # --- Define all targets that we know. ---
-    TARGETS = {}
+    TARGETS = collections.OrderedDict()
 
+    TARGETS["BgZ MSZ 1 -- dev"] = Header()
+    TARGETS["dev.BgZ-MSZ-1.Cert.LoadResources"] = Target("dev/FHIR3-0-2-BgZ-MSZ-1-0/Cert/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.BgZ-MSZ-1.Cert"] = Target("dev/FHIR3-0-2-BgZ-MSZ-1-0/Cert", TOUCHSTONE, WF_202001_DEV)
+
+    TARGETS["MedMij 2019.01 -- dev"] = Header()
+    TARGETS["dev.Medication-907.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM201901-Test/_LoadResources", TOUCHSTONE, WF_201901_DEV, is_loadscript_folder = True)
+    TARGETS["dev.Medication-907.Test.PHR-Client-Nictiz-intern"] = Target("dev/FHIR3-0-2-MM201901-Test/Medication-9-0-7/PHR-Client-Nictiz-intern", TOUCHSTONE, WF_201901_DEV)
+    TARGETS["dev.Medication-907.Test.XIS"] = Target("dev/FHIR3-0-2-MM201901-Test/Medication-9-0-7/XIS-Server", TOUCHSTONE, WF_201901_DEV)
+    TARGETS["dev.Medication-907.Test-test"] = Target("dev/FHIR3-0-2-MM201901-Test/Medication-9-0-7-test", TOUCHSTONE, WF_201901_DEV)
+
+    TARGETS["MedMij 2020.01 -- dev"] = Header()
+    TARGETS["dev.AllergyIntolerance3.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test/AllergyIntolerance-3-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.AllergyIntolerance3.Test"] = Target("dev/FHIR3-0-2-MM202001-Test/AllergyIntolerance-3-0", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.BgZ3.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test/BgZ-3-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.BgZ3.Test"] = Target("dev/FHIR3-0-2-MM202001-Test/BgZ-3-0", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.BgZ3.Cert.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Cert/BgZ-3-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.BgZ3.Cert"] = Target("dev/FHIR3-0-2-MM202001-Cert/BgZ-3-0", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.GGZ2.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test/GGZ-2-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.GGZ2.Test"] = Target("dev/FHIR3-0-2-MM202001-Test/GGZ-2-0", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.GPData2.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test/GenPractData-2-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.GPData2.Test"] = Target("dev/FHIR3-0-2-MM202001-Test/GenPractData-2-0", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.Images2.Test"] = Target("dev/FHIR3-0-2-MM202001-Test/Images-2-0", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.Lab2.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test//LaboratoryResults-2-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.Lab2.Test"] = Target("dev/FHIR3-0-2-MM202001-Test/LaboratoryResults-2-0", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.PDFA3.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test/PDFA-3-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.PDFA3.Test.PHR"] = Target("dev/FHIR3-0-2-MM202001-Test/PDFA-3-0/PHR-Client", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.PDFA3.Test.XIS-Server-Nictiz-intern"] = Target("dev/FHIR3-0-2-MM202001-Test/PDFA-3-0/XIS-Server-Nictiz-intern", TOUCHSTONE, WF_202001_DEV)
     TARGETS["dev.Questionnaires2.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test/Questionnaires-2-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
     TARGETS["dev.Questionnaires2.Test.PHR"] = Target("dev/FHIR3-0-2-MM202001-Test/Questionnaires-2-0/PHR-Client", TOUCHSTONE, WF_202001_DEV, block_until_complete=True)
-    TARGETS["dev.Questionnaires2.Test.XIS"] = Target("dev/FHIR3-0-2-MM202001-Test/Questionnaires-2-0/XIS-Server-Nictiz-intern", TOUCHSTONE, WF_202001_DEV, block_until_complete=True)
-    TARGETS["dev.BgLZ3.Test"] = Target("dev/FHIR3-0-2-MM202002-Test/BgLZ-3-0", TOUCHSTONE, WF_202001_DEV)
-
-    TARGETS["dev.MM2020.01.Test.LoadResources"] = [
-        "dev.Questionnaires2.Test.LoadResources",
+    TARGETS["dev.Questionnaires2.Test.XIS-Server-Nictiz-intern"] = Target("dev/FHIR3-0-2-MM202001-Test/Questionnaires-2-0/XIS-Server-Nictiz-intern", TOUCHSTONE, WF_202001_DEV, block_until_complete=True)
+    TARGETS["dev.SelfMeasurements2.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test/SelfMeasurements-2-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.SelfMeasurements2.Test.XIS"] = Target("dev/FHIR3-0-2-MM202001-Test/SelfMeasurements-2-0/XIS-Server", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.SelfMeasurements2.Cert.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Cert/SelfMeasurements-2-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.SelfMeasurements2.Cert.XIS"] = Target("dev/FHIR3-0-2-MM202001-Cert/SelfMeasurements-2-0/XIS-Server", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.eAppointment2.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test/eAppointment-2-0/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.eAppointment2.Test"] = Target("dev/FHIR3-0-2-MM202001-Test/eAppointment-2-0", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.MM2020.01.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202001-Test/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.MM2020.01.Test"] = [
+        "dev.AllergyIntolerance3.Test",
+        "dev.BgZ3.Test",
+        "dev.GGZ2.Test",
+        "dev.GPData2.Test",
+        "dev.Images2.Test",
+        "dev.Lab2.Test",
+        "dev.PDFA3.Test.PHR",
+        "dev.PDFA3.Test.XIS-Server-Nictiz-intern",
+        "dev.Questionnaires2.Test.PHR",
+        "dev.Questionnaires2.Test.XIS-Server-Nictiz-intern",
+        "dev.SelfMeasurements2.Test.XIS",
+        "dev.eAppointment2.Test"
     ]
 
-    TARGETS["dev.Medication-907.Test"] = Target("dev/FHIR3-0-2-MM201901-Test/Medication-9-0-7-test", TOUCHSTONE, WF_201901_DEV)
+    TARGETS["MedMij 2020.02 -- dev"] = Header()
+    TARGETS["dev.BgLZ3.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202002-Test/BgLZ-3-0", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.BgLZ3.Test.PHR"] = Target("dev/FHIR3-0-2-MM202002-Test/BgLZ-3-0/PHR-Client", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.BgLZ3.Test.XIS-Server-Nictiz-intern"] = Target("dev/FHIR3-0-2-MM202002-Test/BgLZ-3-0/XIS-Server-Nictiz-intern", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.MM2020.02.Test.LoadResources"] = Target("dev/FHIR3-0-2-MM202002-Test/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.MM2020.02.Test"] = [
+        "dev.BgLZ3.Test.PHR",
+        "dev.BgLZ3.Test.XIS-Server-Nictiz-intern"
+    ]
+
+    TARGETS["eOverdracht 4 -- dev"] = Header()
+    TARGETS["dev.eOverdracht4.Test.LoadResources"] = Target("dev/FHIR3-0-2-eOverdracht4-0/Test/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.eOverdracht4.Cert.LoadResources"] = Target("dev/FHIR3-0-2-eOverdracht4-0/Cert/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.eOverdracht4.LoadResources"] = ["dev.eOverdracht4.Test.LoadResources", "dev.eOverdracht4.Cert.LoadResources"]
+    TARGETS["dev.eOverdracht4.Test.Receiving-XIS"] = Target("FHIR3-0-2-eOverdracht4-0/Test/Receiving-XIS", TOUCHSTONE, WF_202001_DEV, {"authorization-token-id": "1234", "notificationEndpoint": "http://example.com/eOverdracht"})
+    TARGETS["dev.eOverdracht4.Test.Sending-XIS-Nictiz-only"] = Target("FHIR3-0-2-eOverdracht4-0/Test/Sending-XIS-Nictiz-only", [TOUCHSTONE, TOUCHSTONE], [WF_202001_DEV, WF_202001_DEV])
+    TARGETS["dev.eOverdracht4.Cert.Receiving-XIS"] = Target("FHIR3-0-2-eOverdracht4-0/Cert/Receiving-XIS", TOUCHSTONE, WF_202001_DEV, {"authorization-token-id": "1234", "notificationEndpoint": "http://example.com/eOverdracht"})
+    TARGETS["dev.eOverdracht4.Cert.Sending-XIS-Nictiz-only"] = Target("FHIR3-0-2-eOverdracht4-0/Cert/Sending-XIS-Nictiz-only", [TOUCHSTONE, TOUCHSTONE], [WF_202001_DEV, WF_202001_DEV])
+    TARGETS["dev.eOverdracht4.Test"] = ["dev.eOverdracht4.Test.Receiving-XIS", "dev.eOverdracht4.Test.Sending-XIS-Nictiz-only"]
+    TARGETS["dev.eOverdracht4.Cert"] = ["dev.eOverdracht4.Cert.Receiving-XIS", "dev.eOverdracht4.Cert.Sending-XIS-Nictiz-only"]
+    TARGETS["dev.eOverdracht4"] = ["dev.eOverdracht4.Test", "dev.eOverdracht4.Cert"]
+
+    TARGETS["Geboortezorg -- dev"] = Header()
+    TARGETS["dev.Geboortezorg.LoadResources"] = Target("FHIR3-0-2-Geboortezorg/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.Geboortezorg"] = Target("FHIR3-0-2-Geboortezorg/Zwangerschapskaart", TOUCHSTONE, WF_202001_DEV)
+    
+    TARGETS["FHIR 4 -- dev"] = Header()
     TARGETS["dev.MP9.3.Test"] = [
         Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/PrescrProcessing/Receive", TOUCHSTONE, WF_4_NO_AUTH_DEV),
         Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/PrescrProcessing/Send-Nictiz-intern", TOUCHSTONE, WF_4_NO_AUTH_DEV),
@@ -67,17 +140,7 @@ class Launcher:
         Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/ReplyProposalVV/Send-Nictiz-intern", TOUCHSTONE, WF_4_NO_AUTH_DEV),
     ]
 
-    TARGETS["dev.eOverdracht4.Test.LoadResources"] = Target("dev/FHIR3-0-2-eOverdracht4-0/Test/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
-    TARGETS["dev.eOverdracht4.Cert.LoadResources"] = Target("dev/FHIR3-0-2-eOverdracht4-0/Cert/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
-    TARGETS["dev.eOverdracht4.LoadResources"] = ["dev.eOverdracht4.Test.LoadResources", "dev.eOverdracht4.Cert.LoadResources"]
-    TARGETS["dev.eOverdracht4.Test.Receiving-XIS"] = Target("FHIR3-0-2-eOverdracht4-0/Test/Receiving-XIS", TOUCHSTONE, WF_202001_DEV, {"authorization-token-id": "1234", "notificationEndpoint": "http://example.com/eOverdracht"})
-    TARGETS["dev.eOverdracht4.Test.Sending-XIS-Nictiz-only"] = Target("FHIR3-0-2-eOverdracht4-0/Test/Sending-XIS-Nictiz-only", [TOUCHSTONE, TOUCHSTONE], [WF_202001_DEV, WF_202001_DEV])
-    TARGETS["dev.eOverdracht4.Cert.Receiving-XIS"] = Target("FHIR3-0-2-eOverdracht4-0/Cert/Receiving-XIS", TOUCHSTONE, WF_202001_DEV, {"authorization-token-id": "1234", "notificationEndpoint": "http://example.com/eOverdracht"})
-    TARGETS["dev.eOverdracht4.Cert.Sending-XIS-Nictiz-only"] = Target("FHIR3-0-2-eOverdracht4-0/Cert/Sending-XIS-Nictiz-only", [TOUCHSTONE, TOUCHSTONE], [WF_202001_DEV, WF_202001_DEV])
-    TARGETS["dev.eOverdracht4.Test"] = ["dev.eOverdracht4.Test.Receiving-XIS", "dev.eOverdracht4.Test.Sending-XIS-Nictiz-only"]
-    TARGETS["dev.eOverdracht4.Cert"] = ["dev.eOverdracht4.Cert.Receiving-XIS", "dev.eOverdracht4.Cert.Sending-XIS-Nictiz-only"]
-    TARGETS["dev.eOverdracht4"] = ["dev.eOverdracht4.Test", "dev.eOverdracht4.Cert"]
-    
+    TARGETS["MedMij 2019.01"] = Header()
     TARGETS["MM2019.01.Test.LoadResources"] = Target("FHIR3-0-2-MM201901-Test/_LoadResources", TOUCHSTONE, WF_201901, is_loadscript_folder = True)
     TARGETS["MM2019.01.Cert.LoadResources"] = Target("FHIR3-0-2-MM201901-Cert/_LoadResources", TOUCHSTONE, WF_201901, is_loadscript_folder = True)
     TARGETS["Geboortezorg.LoadResources"] = Target("FHIR3-0-2-Geboortezorg/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
@@ -87,10 +150,14 @@ class Launcher:
     TARGETS["MM2020.02.Cert.LoadResources"] = Target("FHIR3-0-2-MM202002-Cert/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
     TARGETS["eOverdracht.LoadResources"] = Target("FHIR3-0-2-eOverdracht4-0/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
     
+    TARGETS["MedMij 6"] = Header()
     TARGETS["MedMij6.Test.LoadResources"] = Target("FHIR4-0-1-MedMij-Test/_LoadResources", TOUCHSTONE, WF_4, is_loadscript_folder = True)
     TARGETS["MedMij6.Cert.LoadResources"] = Target("FHIR4-0-1-MedMij-Cert/_LoadResources", TOUCHSTONE, WF_4, is_loadscript_folder = True)
+
+    TARGETS["FHIR 4"] = Header()
     TARGETS["FHIR4.Test.LoadResources"] = Target("FHIR4-0-1-Test/_LoadResources", TOUCHSTONE, WF_4_NO_AUTH, is_loadscript_folder = True)
 
+    TARGETS["Production loadscripts"] = Header()
     TARGETS["LoadResources"] = [
         "MM2019.01.Test.LoadResources",
         "MM2019.01.Cert.LoadResources",
@@ -143,17 +210,20 @@ class Launcher:
 
     def printTargets(self):
         """ Print out all defined targets with their index number. If a target is a collection of other targets, they will be printed in parentheses. """
-        names = list(self.TARGETS.keys())
-        for i in range(len(names)):
-            line = "%2d" % (i + 1)
-            name = names[i]
-            line += ".  " + name
+        i = 0
+        for name in self.TARGETS.keys():
+            if isinstance(self.TARGETS[name], Header):
+                print (f"\n======== {name} ========")
+            else:
+                line = "%2d" % (i + 1)
+                line += ".  " + name
 
-            if type(self.TARGETS[name]) == list:
-                subtargets = [t for t in self.TARGETS[name] if type(t) == str]
-                if len(subtargets) > 0:
-                    line += " (" + ", ".join(subtargets) + ")"
-            print(line)
+                if type(self.TARGETS[name]) == list:
+                    subtargets = [t for t in self.TARGETS[name] if type(t) == str]
+                    if len(subtargets) > 0:
+                        line += " (" + ", ".join(subtargets) + ")"
+                print(line)
+                i += 1
 
     def execute(self, *targets):
         """ Execute one or more targets. """
