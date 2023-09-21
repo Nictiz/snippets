@@ -171,6 +171,9 @@ class Launcher:
         "FHIR4.Test.LoadResources",
     ]
 
+    # If set to true, wait for each test execution until it's complete before continuing.
+    wait_all = False
+
     def __init__(self):
         # Default to this monday
         monday = datetime.date.today() - datetime.timedelta(days = datetime.date.today().weekday())
@@ -297,17 +300,17 @@ class Launcher:
 
         response = self.browser.submit_selected()
         if response.status_code == 200:
-            print(f"{target.rel_path} execution started on {self.browser.url}")
+            print(f"  Execution started on {self.browser.url}")
         else:
-            print(f"Couldn't start execution for {target.rel_path}")
+            print(f"  Couldn't start execution for {target.rel_path}")
 
-        if target.block_until_complete:
+        if target.block_until_complete or self.wait_all:
             self._blockUntilComplete()
 
     def _blockUntilComplete(self):
         """ Stall until the test execution has completed. """
 
-        sys.stdout.write("Waiting until completion ")
+        sys.stdout.write("Waiting: ")
     
         execution_id = self.browser.url.replace("https://touchstone.aegis.net/touchstone/execution?exec=", "")
         running = True
@@ -319,13 +322,24 @@ class Launcher:
             if response.status_code != 200 or "status" not in response.json():
                 print("Couldn't retrieve execution status, continuing")
                 running = False
-            elif response.json()["status"] == "Running":
-                sys.stdout.write(".")
-                sys.stdout.flush()
-                time.sleep(5)
             else:
-                print(" done")
-                running = False
+                stats = response.json()["statusCounts"]
+                total = stats["numberOfTests"]
+                passes = 0 if "numberOfTestPasses" not in stats else stats["numberOfTestPasses"]
+                warns =  0 if "numberOfTestPassesWarn" not in stats else stats["numberOfTestPassesWarn"]
+                fails =  0 if "numberOfTestFailures" not in stats else stats["numberOfTestFailures"]
+                if response.json()["status"] == "Running":
+                    line = f"  Status: {passes + warns + fails}/{total} tests completed (running for {response.json()['duration']})"
+                    sys.stdout.write("\r" + line)
+                    sys.stdout.flush()
+                    time.sleep(5)
+                else:
+                    line = "\r  "
+                    line += "✅" if response.json()["status"] == "Passed" else "❌"
+                    line += f" {passes} passed, {warns} passed with warnings, {fails} failed\n"
+                    sys.stdout.write(line)
+                    sys.stdout.flush()
+                    running = False
 
     def _selectOrigDest(self, type, values):
         """ Select origin or destination dropdowns on the Touchstone UI during execution setup.
@@ -352,11 +366,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--list", help = "List all available targets", action = "store_true")
     parser.add_argument("-T", help = f"Date T to use (default is '{launcher.date_T}')")
+    parser.add_argument("--wait-all", action = "store_true", help = "After launching an execution, wait for it to finish before launching the next one (default is to do this only for executions where it's explicitly defined)")
     parser.add_argument("target", nargs = "*", help = "The targets to execute (both numbers and mnemonics are supported)")
     args = parser.parse_args()
 
     if args.T != None:
         launcher.date_T = args.T
+    launcher.wait_all = args.wait_all
 
     if args.list:
         launcher.printTargets()
