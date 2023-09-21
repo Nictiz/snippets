@@ -105,8 +105,6 @@ class Launcher:
     ]
 
     def __init__(self):
-        self.results = []
-
         # Default to this monday
         monday = datetime.date.today() - datetime.timedelta(days = datetime.date.today().weekday())
         self.date_T = monday.strftime("%Y-%m-%d")
@@ -164,14 +162,14 @@ class Launcher:
                 try:
                     # See if we have an index rather than a mnemonic
                     index = int(target)
-                    target = list(self.TARGETS.keys())[index - 1]
+                    target = [t for t in self.TARGETS.keys() if not isinstance(self.TARGETS[t], Header)][index - 1]
                 except ValueError:
                     # Target wasn't a number
                     pass
                 except IndexError:
-                    self.results.append(f"Unknown target number '{index}")
+                    print(f"Unknown target number '{index}")
                 if not target in self.TARGETS:
-                    self.results.append(f"Unknown target '{target}'")
+                    print(f"Unknown target '{target}'")
                 else:
                     self.execute(self.TARGETS[target])
             elif type(target) == list:
@@ -182,7 +180,7 @@ class Launcher:
     def executeTarget(self, target: Target):
         """ Execute one specific target, defined by a Target object """
         print
-        print(f"====================== Setting up {target.rel_path} =========================")
+        print(f"- Setting up {target.rel_path}")
 
         # Navigate to the relevant target and select all testscripts that are not loadscripts
         self.browser.open(f"https://touchstone.aegis.net/touchstone/testdefinitions?selectedTestGrp=/FHIRSandbox/Nictiz/{target.rel_path}&activeOnly=true&contentEntry=TEST_SCRIPTS&ps=200")
@@ -223,9 +221,9 @@ class Launcher:
         
         response = self.browser.submit_selected()
         if response.status_code == 200:
-            self.results.append(f"{target.rel_path} execution started on {self.browser.url}")
+            print(f"{target.rel_path} execution started on {self.browser.url}")
         else:
-            self.results.append(f"Couldn't start execution for {target.rel_path}")
+            print(f"Couldn't start execution for {target.rel_path}")
 
         if target.block_until_complete:
             self._blockUntilComplete()
@@ -233,8 +231,7 @@ class Launcher:
     def _blockUntilComplete(self):
         """ Stall until the test execution has completed. """
 
-        print(f"Started execution on {self.browser.url}, waiting until it's complete before continuing")
-        sys.stdout.write("Running ")
+        sys.stdout.write("Waiting until completion ")
     
         execution_id = self.browser.url.replace("https://touchstone.aegis.net/touchstone/execution?exec=", "")
         running = True
@@ -272,14 +269,6 @@ class Launcher:
                 if len(dropdowns) > 0:
                     self.browser[dropdowns[0].attrs["name"]] = values[i]
 
-    def printResults(self):
-        print()
-        print(f"====================== Results =======================================")
-        for result in self.results:
-            print(result)
-        print()
-        print()
-
 if __name__ == "__main__":
     launcher = Launcher()
     targets = []
@@ -303,8 +292,6 @@ if __name__ == "__main__":
     try:
         launcher.loginFrontend()
         launcher.execute(*args.target)
-
-        launcher.printResults()
 
     finally:
         # Always try to logout, otherwise we'll have too many open sessions.
