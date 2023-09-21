@@ -289,6 +289,12 @@ class Launcher:
         # However, for some reason this field is not included when programmatically doing this.
         self.browser.form.set("execute", "", True)
         
+        # The submission also expects that all hidden fields containing the default values for variables are _not_ sent
+        # along. Or rather, if they are present the actual input value is ignored or so it seems. So we have to remove
+        # these fields.
+        for input in self.browser.page.find_all("input", class_="ud_defaults"):
+            input.extract()
+
         response = self.browser.submit_selected()
         if response.status_code == 200:
             print(f"{target.rel_path} execution started on {self.browser.url}")
