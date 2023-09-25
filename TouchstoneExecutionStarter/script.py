@@ -9,6 +9,9 @@ import os
 import sys
 import time
 
+from colorama import just_fix_windows_console
+from dataclasses import dataclass
+
 class Target:
     """
     Define a test execution based on the supplied parameters.
@@ -34,6 +37,17 @@ class Target:
 
 class Header:
     pass
+
+@dataclass
+class Execution:
+    target: Target
+    execution_id: str
+    status: str = ""
+    total: int = 0
+    passes: int = 0
+    warns: int =  0
+    fails: int =  0
+    duration: str = ""
 
 class Launcher:
     TOUCHSTONE       = "AEGIS.net, Inc. - TouchstoneFHIR"
@@ -192,7 +206,7 @@ class Launcher:
     ]
 
     # If set to true, wait for each test execution until it's complete before continuing.
-    wait_all = False
+    start_only = False
 
     def __init__(self):
         # Default to this monday
@@ -202,6 +216,7 @@ class Launcher:
         if not ("TS_USER"  in os.environ and "TS_PASS" in os.environ):
             sys.exit("Set the environment variables 'TS_USER' and 'TS_PASS' to login to Touchstone")
 
+        self.executions = []
         self.browser = mechanicalsoup.StatefulBrowser()
         self.__api_key = None
 
@@ -249,7 +264,24 @@ class Launcher:
                 i += 1
 
     def execute(self, *targets):
-        """ Execute one or more targets. """
+        """ Execute one or more targets, defined as number, mnemonic or list of these. """
+        
+        unwrapped = self.__unwrapTargets([], *targets)
+        for target in unwrapped:
+            self.executeTarget(target)
+
+            if target.block_until_complete and (self.start_only == False or unwrapped.index(target) != len(unwrapped) - 1):
+                # We need to wait until completion if this has been defined. This is also true if the --start-only flag
+                # has been set, UNLESS we need to execute more scripts.
+                print("  execution needs to finish before we can continue, switching to status reporting")
+                self.awaitExecutions(True)
+
+        if not self.start_only:
+            self.awaitExecutions()
+
+    def __unwrapTargets(self, unwrapped, *targets):
+        """ Targets may be defined using numbers, mnemonics, and lists of these. This method recursively unwraps these
+            inputs to a linear list of Targets. """
         for target in targets:
             if type(target) == str:
                 try:
@@ -264,12 +296,14 @@ class Launcher:
                 if not target in self.TARGETS:
                     print(f"Unknown target '{target}'")
                 else:
-                    self.execute(self.TARGETS[target])
+                    self.__unwrapTargets(unwrapped, self.TARGETS[target])
             elif type(target) == list:
-                self.execute(*target)
+                self.__unwrapTargets(unwrapped, *target)
             elif isinstance(target, Target):
-                self.executeTarget(target)
-    
+                unwrapped.append(target)
+        
+        return unwrapped
+
     def executeTarget(self, target: Target):
         """ Execute one specific target, defined by a Target object """
         print
@@ -308,7 +342,6 @@ class Launcher:
                 if textarea.attrs["name"].endswith(f"variableSetups.variableSetupMap[{param}]"):
                     self.browser[textarea.attrs["name"]] = target.params[param].strip()
 
-
         # There's a subtle bug between Touchstone and scripting (happened also with the Twill library) where a newline
         # is added to textareas on load (which is then used repeated back in the default value on a new execution, and
         # a newline is added to it, and so forth). So we need to go over all textareas and strip the whitespace.
@@ -327,46 +360,70 @@ class Launcher:
 
         response = self.browser.submit_selected()
         if response.status_code == 200:
-            print(f"  Execution started on {self.browser.url}")
+            print(f"  execution started on {self.browser.url}")
+            execution_id = self.browser.url.replace("https://touchstone.aegis.net/touchstone/execution?exec=", "")
+            self.executions.append(Execution(target, execution_id))
         else:
-            print(f"  Couldn't start execution for {target.rel_path}")
+            print(f"  couldn't start execution for {target.rel_path}")
 
-        if target.block_until_complete or self.wait_all:
-            self._blockUntilComplete()
+    def awaitExecutions(self, blocking_only = False):
+        """ Await the started executions by polling the Touchstone API, and report back the results. """
+        print("\n### Status ###")
 
-    def _blockUntilComplete(self):
-        """ Stall until the test execution has completed. """
+        if blocking_only:
+            executions = [e for e in self.executions if e.target.block_until_complete and (e.status == "Running" or e.status == "")]
+        else:
+            executions = self.executions
 
-        sys.stdout.write("Waiting: ")
-    
-        execution_id = self.browser.url.replace("https://touchstone.aegis.net/touchstone/execution?exec=", "")
-        running = True
-        while running:
-            response = requests.get("https://touchstone.aegis.net/touchstone/api/testExecution/" + execution_id, headers = {
-                "API-Key": self.apiKey(),
-                "Accept": "application/json"
-            })
-            if response.status_code != 200 or "status" not in response.json():
-                print("Couldn't retrieve execution status, continuing")
-                running = False
-            else:
-                stats = response.json()["statusCounts"]
-                total = stats["numberOfTests"]
-                passes = 0 if "numberOfTestPasses" not in stats else stats["numberOfTestPasses"]
-                warns =  0 if "numberOfTestPassesWarn" not in stats else stats["numberOfTestPassesWarn"]
-                fails =  0 if "numberOfTestFailures" not in stats else stats["numberOfTestFailures"]
-                if response.json()["status"] == "Running":
-                    line = f"  Status: {passes + warns + fails}/{total} tests completed (running for {response.json()['duration']})"
-                    sys.stdout.write("\r" + line)
-                    sys.stdout.flush()
-                    time.sleep(5)
+        last_polled_at = datetime.datetime(1970, 1, 1)
+        
+        waiting = len(executions) > 0
+        while waiting:
+            
+            waiting = False
+            for execution in executions:
+                if execution.status == "" or execution.status == "Running":
+                    sleep_time = 4 - (datetime.datetime.now() - last_polled_at).seconds
+                    if sleep_time > 0: time.sleep(sleep_time)
+                    response = requests.get("https://touchstone.aegis.net/touchstone/api/testExecution/" + execution.execution_id, headers = {
+                        "API-Key": self.apiKey(),
+                        "Accept": "application/json"
+                    })
+                    last_polled_at = datetime.datetime.now()
+
+                    if response.status_code != 200 or "status" not in response.json():
+                        execution.status = "Unknown"
+                        print(response)
+                    else:
+                        execution.status = response.json()["status"]
+                        execution.duration = response.json()["duration"]
+
+                        stats = response.json()["statusCounts"]
+                        execution.total = stats["numberOfTests"]
+                        execution.passes = 0 if "numberOfTestPasses" not in stats else stats["numberOfTestPasses"]
+                        execution.warns =  0 if "numberOfTestPassesWarn" not in stats else stats["numberOfTestPassesWarn"]
+                        execution.fails =  0 if "numberOfTestFailures" not in stats else stats["numberOfTestFailures"]
+                
+                total_completed = execution.passes + execution.warns + execution.fails
+                if execution.status == "Unknown":
+                    line = "  Status couldn't be retrieved"
+                elif execution.status == "Running":
+                    line = f"  {total_completed}/{execution.total} tests completed with {execution.passes} passes, {execution.warns} warnings and {execution.fails} failures (running for {execution.duration})"
+                    waiting = True
                 else:
-                    line = "\r  "
-                    line += "✅" if response.json()["status"] == "Passed" else "❌"
-                    line += f" {passes} passed, {warns} passed with warnings, {fails} failed\n"
-                    sys.stdout.write(line)
-                    sys.stdout.flush()
-                    running = False
+                    line = "  "
+                    line += "✅" if execution.status == "Passed" else "❌"
+                    line += f" {execution.passes} passed, {execution.warns} passed with warnings, {execution.fails} failed"
+                    if execution.total > (total_completed):
+                        line += f" ({execution.total - total_completed} never started)"
+                
+                print("\033[2K- " + execution.target.rel_path)
+                print("\033[2K" + line)
+            
+            if waiting:
+                print(f"\033[{len(executions) * 2 + 1}A")
+        
+        print("### End status ###\n")
 
     def _selectOrigDest(self, type, values):
         """ Select origin or destination dropdowns on the Touchstone UI during execution setup.
@@ -387,19 +444,20 @@ class Launcher:
                     self.browser[dropdowns[0].attrs["name"]] = values[i]
 
 if __name__ == "__main__":
+    just_fix_windows_console()
+
     launcher = Launcher()
-    targets = []
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--list", help = "List all available targets", action = "store_true")
     parser.add_argument("-T", help = f"Date T to use (default is '{launcher.date_T}')")
-    parser.add_argument("--wait-all", action = "store_true", help = "After launching an execution, wait for it to finish before launching the next one (default is to do this only for executions where it's explicitly defined)")
+    parser.add_argument("--start-only", action = "store_true", help = "Just launch the executions, don't wait for them to finish and don't report the results, unless it's explicitly defined that an execution should finish before continuing")
     parser.add_argument("target", nargs = "*", help = "The targets to execute (both numbers and mnemonics are supported)")
     args = parser.parse_args()
 
     if args.T != None:
         launcher.date_T = args.T
-    launcher.wait_all = args.wait_all
+    launcher.start_only = args.start_only
 
     if args.list:
         launcher.printTargets()

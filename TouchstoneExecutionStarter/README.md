@@ -7,6 +7,7 @@ Prerequisites:
 * The folders paths _exactly_ match the paths defined in the scripts.
 * Python 3 is installed.
 * The [mechanicalsoup](https://pypi.org/project/MechanicalSoup/) Python module is present.
+* The [colorama](https://pypi.org/project/colorama/) Python module is present.
 * The following environment variables are set (this method is chosen to prevent that the password is accidentally written down i nthe script and then committed):
     * TS_USER: The username of the Touchstone user
     * TS_PASS: The password of the Touchstone user
@@ -19,10 +20,8 @@ Once defined, you can list all known targets using:
 And you can execute one or more targets by listing them on the command line, either using their mnemonic names or their numbers as shown in the `--list` output, e.g.:
 > python script.py 3 6 dev.eOverdracht4.Cert
 > 
-will launch the targets defined by index number 3, index number 6, and mnemonic "dev.eOvderdrach4.Cert". When launching loadscripts (or targets where it's explicitly defined for), it will stall until execution has finished.
+will launch the targets defined by index number 3, index number 6, and mnemonic "dev.eOvderdrach4.Cert". After starting all executions, the script will poll the Touchstone API for the result until all executions are completed. When launching loadscripts (or targets where it's explicitly defined for), the script will stall until this Touchstone execution has finished.
 
-The script does not:
-* Take care of uploading materials to Touchstone.
-* Report back results of the execution. It merely provides the URL where the running test execution can be found.
+The script does not take care of uploading materials to Touchstone.
 
 Please note: this script is a web scraper, it uses the GUI frontend of Touchstone. Touchstone does actually provide an API, but it is not suited to our needs, as it can only be used to start _existing_ test executions. Since we're the ones developing test scenario's, our need is to _create_ new executions based on the TestScript and fixture files that we uploaded.
