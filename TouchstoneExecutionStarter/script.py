@@ -129,17 +129,17 @@ class Launcher:
     TARGETS["dev.eOverdracht4.Test.LoadResources"] = Target("dev/FHIR3-0-2-eOverdracht4-0/Test/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
     TARGETS["dev.eOverdracht4.Cert.LoadResources"] = Target("dev/FHIR3-0-2-eOverdracht4-0/Cert/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
     TARGETS["dev.eOverdracht4.LoadResources"] = ["dev.eOverdracht4.Test.LoadResources", "dev.eOverdracht4.Cert.LoadResources"]
-    TARGETS["dev.eOverdracht4.Test.Receiving-XIS"] = Target("FHIR3-0-2-eOverdracht4-0/Test/Receiving-XIS", TOUCHSTONE, WF_202001_DEV, {"authorization-token-id": "1234", "notificationEndpoint": "http://example.com/eOverdracht"})
-    TARGETS["dev.eOverdracht4.Test.Sending-XIS-Nictiz-only"] = Target("FHIR3-0-2-eOverdracht4-0/Test/Sending-XIS-Nictiz-only", [TOUCHSTONE, TOUCHSTONE], [WF_202001_DEV, WF_202001_DEV])
-    TARGETS["dev.eOverdracht4.Cert.Receiving-XIS"] = Target("FHIR3-0-2-eOverdracht4-0/Cert/Receiving-XIS", TOUCHSTONE, WF_202001_DEV, {"authorization-token-id": "1234", "notificationEndpoint": "http://example.com/eOverdracht"})
-    TARGETS["dev.eOverdracht4.Cert.Sending-XIS-Nictiz-only"] = Target("FHIR3-0-2-eOverdracht4-0/Cert/Sending-XIS-Nictiz-only", [TOUCHSTONE, TOUCHSTONE], [WF_202001_DEV, WF_202001_DEV])
+    TARGETS["dev.eOverdracht4.Test.Receiving-XIS"] = Target("dev/FHIR3-0-2-eOverdracht4-0/Test/Receiving-XIS", TOUCHSTONE, WF_202001_DEV, {"authorization-token-id": "1234", "notificationEndpoint": "http://example.com/eOverdracht"})
+    TARGETS["dev.eOverdracht4.Test.Sending-XIS-Nictiz-only"] = Target("dev/FHIR3-0-2-eOverdracht4-0/Test/Sending-XIS-Nictiz-only", [TOUCHSTONE, TOUCHSTONE], [WF_202001_DEV, WF_202001_DEV])
+    TARGETS["dev.eOverdracht4.Cert.Receiving-XIS"] = Target("dev/FHIR3-0-2-eOverdracht4-0/Cert/Receiving-XIS", TOUCHSTONE, WF_202001_DEV, {"authorization-token-id": "1234", "notificationEndpoint": "http://example.com/eOverdracht"})
+    TARGETS["dev.eOverdracht4.Cert.Sending-XIS-Nictiz-only"] = Target("dev/FHIR3-0-2-eOverdracht4-0/Cert/Sending-XIS-Nictiz-only", [TOUCHSTONE, TOUCHSTONE], [WF_202001_DEV, WF_202001_DEV])
     TARGETS["dev.eOverdracht4.Test"] = ["dev.eOverdracht4.Test.Receiving-XIS", "dev.eOverdracht4.Test.Sending-XIS-Nictiz-only"]
     TARGETS["dev.eOverdracht4.Cert"] = ["dev.eOverdracht4.Cert.Receiving-XIS", "dev.eOverdracht4.Cert.Sending-XIS-Nictiz-only"]
     TARGETS["dev.eOverdracht4"] = ["dev.eOverdracht4.Test", "dev.eOverdracht4.Cert"]
 
     TARGETS["Geboortezorg -- dev"] = Header()
-    TARGETS["dev.Geboortezorg.LoadResources"] = Target("FHIR3-0-2-Geboortezorg/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
-    TARGETS["dev.Geboortezorg"] = Target("FHIR3-0-2-Geboortezorg/Zwangerschapskaart", TOUCHSTONE, WF_202001_DEV)
+    TARGETS["dev.Geboortezorg.LoadResources"] = Target("dev/FHIR3-0-2-Geboortezorg/_LoadResources", TOUCHSTONE, WF_202001_DEV, is_loadscript_folder = True)
+    TARGETS["dev.Geboortezorg"] = Target("dev/FHIR3-0-2-Geboortezorg/Zwangerschapskaart", TOUCHSTONE, WF_202001_DEV)
     
     TARGETS["MedMij 6 -- dev"] = Header()
     TARGETS["dev.MM6.Test.LoadResources"] = Target("FHIR4-0-1-MedMij-Test/_LoadResources", TOUCHSTONE, WF_4_DEV, is_loadscript_folder = True)
@@ -174,36 +174,38 @@ class Launcher:
         Target("dev/FHIR4-0-1-Test/MP9-3-0-0-beta/ReplyProposalVV/Send-Nictiz-intern", TOUCHSTONE, WF_4_NO_AUTH_DEV),
     ]
 
+    TARGETS["BgZ MSZ 1"] = Header()
+    TARGETS["BgZ-MSZ-1.LoadResources"] = Target("FHIR3-0-2-BgZ-MSZ-1-0/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
+
     TARGETS["MedMij 2019.01"] = Header()
     TARGETS["MM2019.01.Test.LoadResources"] = Target("FHIR3-0-2-MM201901-Test/_LoadResources", TOUCHSTONE, WF_201901, is_loadscript_folder = True)
+    TARGETS["Medication-907.Test.XIS"] = Target("FHIR3-0-2-MM201901-Test/Medication-9-0-7/XIS-Server", TOUCHSTONE, WF_201901)
+    TARGETS["Medication-907.Test-test"] = Target("FHIR3-0-2-MM201901-Test/Medication-9-0-7-test", TOUCHSTONE, WF_201901)
+
     TARGETS["MM2019.01.Cert.LoadResources"] = Target("FHIR3-0-2-MM201901-Cert/_LoadResources", TOUCHSTONE, WF_201901, is_loadscript_folder = True)
-    TARGETS["Geboortezorg.LoadResources"] = Target("FHIR3-0-2-Geboortezorg/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
+
+    TARGETS["MedMij 2020.01"] = Header()
     TARGETS["MM2020.01.Test.LoadResources"] = Target("FHIR3-0-2-MM202001-Test/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
     TARGETS["MM2020.01.Cert.LoadResources"] = Target("FHIR3-0-2-MM202001-Cert/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
+
+    TARGETS["MedMij 2020.02"] = Header()
     TARGETS["MM2020.02.Test.LoadResources"] = Target("FHIR3-0-2-MM202002-Test/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
     TARGETS["MM2020.02.Cert.LoadResources"] = Target("FHIR3-0-2-MM202002-Cert/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
+
+    TARGETS["eOverdracht 4"] = Header()
     TARGETS["eOverdracht.LoadResources"] = Target("FHIR3-0-2-eOverdracht4-0/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
-    
+    TARGETS["eOverdracht4.Test.Receiving-XIS"] = Target("FHIR3-0-2-eOverdracht4-0/Test/Receiving-XIS", TOUCHSTONE, WF_202001, {"authorization-token-id": "1234", "notificationEndpoint": "http://example.com/eOverdracht"})
+    TARGETS["eOverdracht4.Cert.Receiving-XIS"] = Target("FHIR3-0-2-eOverdracht4-0/Cert/Receiving-XIS", TOUCHSTONE, WF_202001, {"authorization-token-id": "1234", "notificationEndpoint": "http://example.com/eOverdracht"})
+
+    TARGETS["Geboortezorg"] = Header()
+    TARGETS["Geboortezorg.LoadResources"] = Target("FHIR3-0-2-Geboortezorg/_LoadResources", TOUCHSTONE, WF_202001, is_loadscript_folder = True)
+
     TARGETS["MedMij 6"] = Header()
     TARGETS["MedMij6.Test.LoadResources"] = Target("FHIR4-0-1-MedMij-Test/_LoadResources", TOUCHSTONE, WF_4, is_loadscript_folder = True)
     TARGETS["MedMij6.Cert.LoadResources"] = Target("FHIR4-0-1-MedMij-Cert/_LoadResources", TOUCHSTONE, WF_4, is_loadscript_folder = True)
 
     TARGETS["FHIR 4"] = Header()
     TARGETS["FHIR4.Test.LoadResources"] = Target("FHIR4-0-1-Test/_LoadResources", TOUCHSTONE, WF_4_NO_AUTH, is_loadscript_folder = True)
-
-    TARGETS["Production loadscripts"] = Header()
-    TARGETS["LoadResources"] = [
-        "MM2019.01.Test.LoadResources",
-        "MM2019.01.Cert.LoadResources",
-        "MM2020.01.Test.LoadResources",
-        "MM2020.01.Cert.LoadResources",
-        "MM2020.02.Test.LoadResources",
-        "MM2020.02.Cert.LoadResources",
-        "Geboortezorg.LoadResources",
-        "MedMij6.Test.LoadResources",
-        "MedMij6.Cert.LoadResources",
-        "FHIR4.Test.LoadResources",
-    ]
 
     # If set to true, wait for each test execution until it's complete before continuing.
     start_only = False
