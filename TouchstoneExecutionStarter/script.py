@@ -216,6 +216,7 @@ class Launcher:
         if not ("TS_USER"  in os.environ and "TS_PASS" in os.environ):
             sys.exit("Set the environment variables 'TS_USER' and 'TS_PASS' to login to Touchstone")
 
+        self.jira_table_summary = False
         self.executions = []
         self.browser = mechanicalsoup.StatefulBrowser()
         self.__api_key = None
@@ -278,6 +279,8 @@ class Launcher:
 
         if not self.start_only:
             self.awaitExecutions()
+            if self.jira_table_summary:
+                self.printJiraTable()
 
     def __unwrapTargets(self, unwrapped, *targets):
         """ Targets may be defined using numbers, mnemonics, and lists of these. This method recursively unwraps these
@@ -425,6 +428,18 @@ class Launcher:
         
         print("### End status ###\n")
 
+    def printJiraTable(self):
+        print("### Jira table ###")
+        for execution in self.executions:
+            line =  f"|{execution.target.rel_path}|"
+            line += "(/)" if execution.status == "Passed" else "(x)"
+            if execution.fails > 0:
+                line += f"\n{execution.fails} x failures"
+            if execution.warns > 0:
+                line += f"\n{execution.warns} x warning"
+            line += f"| | |[https://touchstone.aegis.net/touchstone/execution?exec={execution.execution_id}]|"
+            print(line)
+
     def _selectOrigDest(self, type, values):
         """ Select origin or destination dropdowns on the Touchstone UI during execution setup.
             * type: "origin" or "dest"
@@ -452,12 +467,14 @@ if __name__ == "__main__":
     parser.add_argument("-l", "--list", help = "List all available targets", action = "store_true")
     parser.add_argument("-T", help = f"Date T to use (default is '{launcher.date_T}')")
     parser.add_argument("--start-only", action = "store_true", help = "Just launch the executions, don't wait for them to finish and don't report the results, unless it's explicitly defined that an execution should finish before continuing")
+    parser.add_argument("--jira-table", action = "store_true", help = "Print a summary in Jira table format after completion (ignored if --start-only is provided)")
     parser.add_argument("target", nargs = "*", help = "The targets to execute (both numbers and mnemonics are supported)")
     args = parser.parse_args()
 
     if args.T != None:
         launcher.date_T = args.T
     launcher.start_only = args.start_only
+    launcher.jira_table_summary = args.jira_table
 
     if args.list:
         launcher.printTargets()
