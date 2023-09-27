@@ -53,7 +53,7 @@ class Execution:
     fails: int =  0
     duration: str = ""
 
-class Launcher:
+class Launcher(mechanicalsoup.StatefulBrowser):
     TOUCHSTONE       = "AEGIS.net, Inc. - TouchstoneFHIR"
     WF_201901        = "Nictiz - Nictiz WildFHIR V201901 - FHIR 3.0.2"
     WF_202001        = "Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2"
@@ -215,6 +215,8 @@ class Launcher:
     start_only = False
 
     def __init__(self):
+        super().__init__()
+
         # Default to this monday
         monday = datetime.date.today() - datetime.timedelta(days = datetime.date.today().weekday())
         self.date_T = monday.strftime("%Y-%m-%d")
@@ -224,22 +226,21 @@ class Launcher:
 
         self.jira_table_summary = False
         self.executions = []
-        self.browser = mechanicalsoup.StatefulBrowser()
         self.__api_key = None
 
     def loginFrontend(self):
         """ Login to the Touchstone website. It requires the environment variables TS_USER and TS_PASS to be set. """
-        self.browser.open("https://touchstone.aegis.net/touchstone/login")
+        self.open("https://touchstone.aegis.net/touchstone/login")
 
-        self.browser.select_form('form[id="loginForm"]')
-        self.browser["emailOrLoginID"] = os.environ["TS_USER"]
-        self.browser["password"] = os.environ["TS_PASS"]
-        response = self.browser.submit_selected()
+        self.select_form('form[id="loginForm"]')
+        self["emailOrLoginID"] = os.environ["TS_USER"]
+        self["password"] = os.environ["TS_PASS"]
+        response = self.submit_selected()
         if "Sign Out" not in response.text:
             sys.exit("Couldn't login into Touchstone")
 
     def logoutFrontend(self):
-        self.browser.open("https://touchstone.aegis.net/touchstone/logout")
+        self.open("https://touchstone.aegis.net/touchstone/logout")
 
     def apiKey(self):
         if self.__api_key == None:
@@ -320,8 +321,8 @@ class Launcher:
         parts = target.rel_path.split("/")
         parent_folder = "/".join(parts[:-1])
         leaf_folder = parts[-1]
-        response = self.browser.open(f"https://touchstone.aegis.net/touchstone/testdefinitions?selectedTestGrp=/FHIRSandbox/Nictiz/{parent_folder}")
-        if response.status_code != 200 or any(t.text.strip() == "Please select a node under Test Definitions." for t in self.browser.page.find_all("span", class_="alertContent")):
+        response = self.open(f"https://touchstone.aegis.net/touchstone/testdefinitions?selectedTestGrp=/FHIRSandbox/Nictiz/{parent_folder}")
+        if response.status_code != 200 or any(t.text.strip() == "Please select a node under Test Definitions." for t in self.page.find_all("span", class_="alertContent")):
             print(f"Parent folder '{parent_folder} for target {target.rel_path} doesn't exist or cannot be accessed, cannot upload")
             sys.exit(1)
 
@@ -331,27 +332,27 @@ class Launcher:
         shutil.make_archive(tmp_dir / leaf_folder, "zip", testscript_dir / target.rel_path)
         
         # Upload the file
-        self.browser.select_form('form[id="testGroupUploadForm"]')
-        self.browser["uploadFile"] = open(tmp_dir / f"{leaf_folder}.zip", "rb")
-        self.browser["parentGroupPath"] = "/FHIRSandbox/Nictiz/" + parent_folder
-        self.browser["canBeViewedBy"] = "BY_MY_ORG"
-        self.browser["canBeModifiedBy"] = "BY_MY_ORG"
-        self.browser["validator"] = "FHIR3-0-2-Nictiz-03"
+        self.select_form('form[id="testGroupUploadForm"]')
+        self["uploadFile"] = open(tmp_dir / f"{leaf_folder}.zip", "rb")
+        self["parentGroupPath"] = "/FHIRSandbox/Nictiz/" + parent_folder
+        self["canBeViewedBy"] = "BY_MY_ORG"
+        self["canBeModifiedBy"] = "BY_MY_ORG"
+        self["validator"] = "FHIR3-0-2-Nictiz-03"
 
         # Here comes the nasty part. MechanicalSoup doesn't set pass the content type of file uploads to Requests when
         # making the request, but Touchstone demands this to be set. So we need to intercept the MechanicalSoup
         # machinery here and modify what's passed to Requests.
         # First let MechanicalSoup construct the arguments to submit the form.
-        request_kwargs = mechanicalsoup.Browser.get_request_kwargs(self.browser.form.form,
-            self.browser.url,
-            headers = {"Referer": self.browser.url})
+        request_kwargs = mechanicalsoup.Browser.get_request_kwargs(self.form.form,
+            self.url,
+            headers = {"Referer": self.url})
         # Now modify the "uploadFile entry" so that it includes the content type
         uploadFile = request_kwargs["files"]["uploadFile"]
         request_kwargs["files"]['uploadFile'] = (uploadFile[0], uploadFile[1], "application/zip")
 
         # Now we can make the acutual request, using the Requests Session in the MechanicalSoup StatefulBrowser.
-        response = self.browser.session.request(**request_kwargs)
-        mechanicalsoup.Browser.add_soup(response, self.browser.soup_config)
+        response = self.session.request(**request_kwargs)
+        mechanicalsoup.Browser.add_soup(response, self.soup_config)
 
         #print(response)
         #print(response.soup)
@@ -369,20 +370,20 @@ class Launcher:
         print(f"- Setting up {target.rel_path}")
 
         # Navigate to the relevant target and select all testscripts that are not loadscripts
-        self.browser.open(f"https://touchstone.aegis.net/touchstone/testdefinitions?selectedTestGrp=/FHIRSandbox/Nictiz/{target.rel_path}&activeOnly=true&contentEntry=TEST_SCRIPTS&ps=200")
+        self.open(f"https://touchstone.aegis.net/touchstone/testdefinitions?selectedTestGrp=/FHIRSandbox/Nictiz/{target.rel_path}&activeOnly=true&contentEntry=TEST_SCRIPTS&ps=200")
         select_all = True
-        self.browser.select_form('form[id="testDefSearch"]')
+        self.select_form('form[id="testDefSearch"]')
         selected_testscripts = []
-        for input in self.browser.page.find_all("input", "selectedId"):
+        for input in self.page.find_all("input", "selectedId"):
             if "load-resources-purgecreateupdate" in input.attrs["value"] and not target.is_loadscript_folder:
                 select_all = False
             else:                
                 selected_testscripts.append(input.attrs["value"])
-        self.browser["selectedTestScripts"] = selected_testscripts
-        self.browser["allSelected"] = True if select_all else False
+        self["selectedTestScripts"] = selected_testscripts
+        self["allSelected"] = True if select_all else False
 
         # Submit the form
-        self.browser.submit_selected()
+        self.submit_selected()
         
         # Select the origin based on its name
         self._selectOrigDest("origin", target.origins)
@@ -391,36 +392,36 @@ class Launcher:
         self._selectOrigDest("dest", target.destinations)
 
         # Populate all variables
-        self.browser.select_form('form[id="testSetupForm"]')
+        self.select_form('form[id="testSetupForm"]')
         if target.params == None:
             target.params = {"T": self.date_T}
         elif "T" not in target.params:
             target.params["T"] = self.date_T
         for param in target.params:
-            for textarea in self.browser.page.find_all("textarea"): # The name attribute of the targetted textarea is very long and I'm not sure if the beginning is guaranteed to be stable, so we're using a search on all textarea's here and filter out based on the latter part of the name
+            for textarea in self.page.find_all("textarea"): # The name attribute of the targetted textarea is very long and I'm not sure if the beginning is guaranteed to be stable, so we're using a search on all textarea's here and filter out based on the latter part of the name
                 if textarea.attrs["name"].endswith(f"variableSetups.variableSetupMap[{param}]"):
-                    self.browser[textarea.attrs["name"]] = target.params[param].strip()
+                    self[textarea.attrs["name"]] = target.params[param].strip()
 
         # There's a subtle bug between Touchstone and scripting (happened also with the Twill library) where a newline
         # is added to textareas on load (which is then used repeated back in the default value on a new execution, and
         # a newline is added to it, and so forth). So we need to go over all textareas and strip the whitespace.
-        for textarea in self.browser.page.find_all("textarea"):
-            self.browser[textarea.attrs["name"]] = textarea.text.strip()
+        for textarea in self.page.find_all("textarea"):
+            self[textarea.attrs["name"]] = textarea.text.strip()
 
         # The submission expects a field called "execute", which is normally sent when clicking the "execute" button.
         # However, for some reason this field is not included when programmatically doing this.
-        self.browser.form.set("execute", "", True)
+        self.form.set("execute", "", True)
         
         # The submission also expects that all hidden fields containing the default values for variables are _not_ sent
         # along. Or rather, if they are present the actual input value is ignored or so it seems. So we have to remove
         # these fields.
-        for input in self.browser.page.find_all("input", class_="ud_defaults"):
+        for input in self.page.find_all("input", class_="ud_defaults"):
             input.extract()
 
-        response = self.browser.submit_selected()
+        response = self.submit_selected()
         if response.status_code == 200:
-            print(f"  execution started on {self.browser.url}")
-            execution_id = self.browser.url.replace("https://touchstone.aegis.net/touchstone/execution?exec=", "")
+            print(f"  execution started on {self.url}")
+            execution_id = self.url.replace("https://touchstone.aegis.net/touchstone/execution?exec=", "")
             self.executions.append(Execution(target, execution_id))
         else:
             print(f"  couldn't start execution for {target.rel_path}")
@@ -501,7 +502,7 @@ class Launcher:
             * type: "origin" or "dest"
             * values: A list of origins or destinations to select.
         """
-        self.browser.select_form('form[id="testSetupForm"]')
+        self.select_form('form[id="testSetupForm"]')
 
         for i in range(len(values)):
             if i == 0:
@@ -510,9 +511,9 @@ class Launcher:
                 dropdown_ids = [f"main{type.lower()}{i + 1}TsSelect"]
 
             for id in dropdown_ids:
-                dropdowns = self.browser.page.find_all("select", id=id)
+                dropdowns = self.page.find_all("select", id=id)
                 if len(dropdowns) > 0:
-                    self.browser[dropdowns[0].attrs["name"]] = values[i]
+                    self[dropdowns[0].attrs["name"]] = values[i]
 
 if __name__ == "__main__":
     just_fix_windows_console()
@@ -541,8 +542,8 @@ if __name__ == "__main__":
         exit(1)
     try:
         launcher.loginFrontend()
-        #launcher.execute(*args.target)
-        launcher.uploadTarget(launcher.TARGETS["dev.eAppointment2.Test"])
+        launcher.execute(*args.target)
+        #launcher.uploadTarget(launcher.TARGETS["dev.eAppointment2.Test"])
 
     finally:
         # Always try to logout, otherwise we'll have too many open sessions.
