@@ -6,7 +6,11 @@ import datetime
 import requests
 import mechanicalsoup
 import os
+import pathlib
+import re
+import shutil
 import sys
+import tempfile
 import time
 
 from colorama import just_fix_windows_console
@@ -309,6 +313,56 @@ class Launcher:
         
         return unwrapped
 
+    def uploadTarget(self, target: Target):
+        print
+        print(f"- Uploading {target.rel_path}")
+
+        parts = target.rel_path.split("/")
+        parent_folder = "/".join(parts[:-1])
+        leaf_folder = parts[-1]
+        response = self.browser.open(f"https://touchstone.aegis.net/touchstone/testdefinitions?selectedTestGrp=/FHIRSandbox/Nictiz/{parent_folder}")
+        if response.status_code != 200 or any(t.text.strip() == "Please select a node under Test Definitions." for t in self.browser.page.find_all("span", class_="alertContent")):
+            print(f"Parent folder '{parent_folder} for target {target.rel_path} doesn't exist or cannot be accessed, cannot upload")
+            sys.exit(1)
+
+        # Create a zip file to upload
+        testscript_dir = pathlib.Path("../../Nictiz-testscripts")
+        tmp_dir = pathlib.Path(tempfile.mkdtemp())
+        shutil.make_archive(tmp_dir / leaf_folder, "zip", testscript_dir / target.rel_path)
+        
+        # Upload the file
+        self.browser.select_form('form[id="testGroupUploadForm"]')
+        self.browser["uploadFile"] = open(tmp_dir / f"{leaf_folder}.zip", "rb")
+        self.browser["parentGroupPath"] = "/FHIRSandbox/Nictiz/" + parent_folder
+        self.browser["canBeViewedBy"] = "BY_MY_ORG"
+        self.browser["canBeModifiedBy"] = "BY_MY_ORG"
+        self.browser["validator"] = "FHIR3-0-2-Nictiz-03"
+
+        # Here comes the nasty part. MechanicalSoup doesn't set pass the content type of file uploads to Requests when
+        # making the request, but Touchstone demands this to be set. So we need to intercept the MechanicalSoup
+        # machinery here and modify what's passed to Requests.
+        # First let MechanicalSoup construct the arguments to submit the form.
+        request_kwargs = mechanicalsoup.Browser.get_request_kwargs(self.browser.form.form,
+            self.browser.url,
+            headers = {"Referer": self.browser.url})
+        # Now modify the "uploadFile entry" so that it includes the content type
+        uploadFile = request_kwargs["files"]["uploadFile"]
+        request_kwargs["files"]['uploadFile'] = (uploadFile[0], uploadFile[1], "application/zip")
+
+        # Now we can make the acutual request, using the Requests Session in the MechanicalSoup StatefulBrowser.
+        response = self.browser.session.request(**request_kwargs)
+        mechanicalsoup.Browser.add_soup(response, self.browser.soup_config)
+
+        #print(response)
+        #print(response.soup)
+        #print(response.soup.find_all("span", class_="alertContent"))
+        if response.status_code == 200 and any(t.text.strip().startswith(f"The zip file '{leaf_folder}.zip' containing the test group '{leaf_folder}' has been uploaded successfully") for t in response.soup.find_all("span", class_="alertContent")):
+            print("Success")
+        else:
+            print("No banana")
+
+        shutil.rmtree(tmp_dir)
+
     def executeTarget(self, target: Target):
         """ Execute one specific target, defined by a Target object """
         print
@@ -487,7 +541,8 @@ if __name__ == "__main__":
         exit(1)
     try:
         launcher.loginFrontend()
-        launcher.execute(*args.target)
+        #launcher.execute(*args.target)
+        launcher.uploadTarget(launcher.TARGETS["dev.eAppointment2.Test"])
 
     finally:
         # Always try to logout, otherwise we'll have too many open sessions.
