@@ -339,30 +339,32 @@ class Launcher(mechanicalsoup.StatefulBrowser):
         self["canBeModifiedBy"] = "BY_MY_ORG"
         self["validator"] = "FHIR3-0-2-Nictiz-03"
 
-        # Here comes the nasty part. MechanicalSoup doesn't set pass the content type of file uploads to Requests when
-        # making the request, but Touchstone demands this to be set. So we need to intercept the MechanicalSoup
-        # machinery here and modify what's passed to Requests.
-        # First let MechanicalSoup construct the arguments to submit the form.
-        request_kwargs = mechanicalsoup.Browser.get_request_kwargs(self.form.form,
-            self.url,
-            headers = {"Referer": self.url})
-        # Now modify the "uploadFile entry" so that it includes the content type
-        uploadFile = request_kwargs["files"]["uploadFile"]
-        request_kwargs["files"]['uploadFile'] = (uploadFile[0], uploadFile[1], "application/zip")
-
-        # Now we can make the acutual request, using the Requests Session in the MechanicalSoup StatefulBrowser.
-        response = self.session.request(**request_kwargs)
-        mechanicalsoup.Browser.add_soup(response, self.soup_config)
-
-        #print(response)
-        #print(response.soup)
-        #print(response.soup.find_all("span", class_="alertContent"))
-        if response.status_code == 200 and any(t.text.strip().startswith(f"The zip file '{leaf_folder}.zip' containing the test group '{leaf_folder}' has been uploaded successfully") for t in response.soup.find_all("span", class_="alertContent")):
-            print("Success")
-        else:
-            print("No banana")
+        ok_msg = f"The zip file '{leaf_folder}.zip' containing the test group '{leaf_folder}' has been uploaded successfully"
+        response = self.submit_selected()
 
         shutil.rmtree(tmp_dir)
+
+        if response.status_code == 200 and any(t.text.strip().startswith(ok_msg) for t in self.page.find_all("span", class_="alertContent")):
+            print("Success")
+            return True
+        else:
+            print("Upload failed")
+            return False
+
+    def _request(self, form, url=None, **kwargs):
+        """ Overriden method of mechanicalsoup.Browser to add the content type to zip file uploads.
+            MechanicalSoup doesn't pass the content type of file uploads to Requests when making the POST request, but
+            Touchstone demands this to be set. """
+
+        request_kwargs = mechanicalsoup.Browser.get_request_kwargs(form, url, **kwargs)
+
+        if "files" in request_kwargs and "uploadFile":
+            for identifier in request_kwargs["files"].keys():
+                file_tuple = request_kwargs["files"][identifier]
+                if file_tuple[0].endswith(".zip"):
+                    request_kwargs["files"][identifier] = (file_tuple[0], file_tuple[1], "application/zip")
+        
+        return self.session.request(**request_kwargs)
 
     def executeTarget(self, target: Target):
         """ Execute one specific target, defined by a Target object """
@@ -542,8 +544,8 @@ if __name__ == "__main__":
         exit(1)
     try:
         launcher.loginFrontend()
-        launcher.execute(*args.target)
-        #launcher.uploadTarget(launcher.TARGETS["dev.eAppointment2.Test"])
+        #launcher.execute(*args.target)
+        launcher.uploadTarget(launcher.TARGETS["dev.eAppointment2.Test"])
 
     finally:
         # Always try to logout, otherwise we'll have too many open sessions.
