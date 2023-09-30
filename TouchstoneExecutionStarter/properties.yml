@@ -1,0 +1,216 @@
+dev:
+  access: My organization
+  origins: AEGIS.net, Inc. - TouchstoneFHIR
+
+  FHIR3-0-2-BgZ-MSZ-1-0:
+    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz Dev
+  
+  FHIR3-0-2-eOverdracht4-0:
+    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz Dev
+
+    Test/Receiving-XIS:
+      params:
+        authorization-token-id: "1234"
+        notificationEndpoint: http://example.com/eOverdracht
+
+    Test/Sending-XIS-Nictiz-only:
+      origins:
+        - AEGIS.net, Inc. - TouchstoneFHIR
+        - AEGIS.net, Inc. - TouchstoneFHIR
+      destinations:
+        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+
+    Cert/Receiving-XIS:
+      params:
+        authorization-token-id: "1234"
+        notificationEndpoint: http://example.com/eOverdracht
+
+    Cert/Sending-XIS-Nictiz-only:
+      origins:
+        - AEGIS.net, Inc. - TouchstoneFHIR
+        - AEGIS.net, Inc. - TouchstoneFHIR
+      destinations:
+        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+
+  FHIR3-0-2-Geboortezorg:
+    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validators: Nictiz Dev
+  
+  FHIR3-0-2-MM201901-Cert:
+    destinations: Nictiz - Nictiz WildFHIR V201901-2 Dev - FHIR 3.0.2
+    validator: Nictiz 2019.01
+  
+  FHIR3-0-2-MM201901-Test:
+    destinations: Nictiz - Nictiz WildFHIR V201901-2 Dev - FHIR 3.0.2
+
+  FHIR3-0-2-MM202001-Cert:
+    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz Dev
+    
+    Questionnaires-2-0:
+      block until complete: true
+
+  FHIR3-0-2-MM202001-Test:
+    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz Dev
+    
+    Questionnaires-2-0:
+      block until complete: true
+
+  FHIR3-0-2-MM202002-Cert:
+    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz Dev
+    
+  FHIR3-0-2-MM202002-Test:
+    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz Dev
+    
+  FHIR4-0-1-MedMij-Cert:
+    destinations: Nictiz - R4 MedMij (Dev) - FHIR 4.0.1
+    validator: Nictiz-R4-nl-core
+  
+  FHIR4-0-1-MedMij-Test:
+    destinations: Nictiz - R4 MedMij (Dev) - FHIR 4.0.1
+    validator: Nictiz-R4-nl-core
+
+  FHIR4-0-1-Test:
+    destinations: Nictiz - R4 MedMij - FHIR 4.0.1
+    validator: Nictiz-R4-nl-core
+
+production:
+  access: My organization
+  origins: AEGIS.net, Inc. - TouchstoneFHIR
+
+  FHIR3-0-2-BgZ-MSZ-1-0:
+    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    validator: Nictiz 2020.01
+    Cert:
+      access: Nictiz-Certify
+  
+  FHIR3-0-2-eOverdracht4-0:
+    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    validator: Nictiz 2020.01
+
+    Test:
+      access: Nictiz-Testing
+      
+      Receiving-XIS:
+        params:
+          authorization-token-id: "1234"
+          notificationEndpoint: http://example.com/eOverdracht
+
+      Sending-XIS-Nictiz-only:
+        origins:
+          - AEGIS.net, Inc. - TouchstoneFHIR
+          - AEGIS.net, Inc. - TouchstoneFHIR
+        destinations:
+          - Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+          - Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+
+    Cert:
+      access: Nictiz-Certify
+      
+      Receiving-XIS:
+        params:
+          authorization-token-id: "1234"
+          notificationEndpoint: http://example.com/eOverdracht
+
+      Sending-XIS-Nictiz-only:
+        origins:
+          - AEGIS.net, Inc. - TouchstoneFHIR
+          - AEGIS.net, Inc. - TouchstoneFHIR
+        destinations:
+          - Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+          - Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+
+  FHIR3-0-2-Geboortezorg:
+    validators: Nictiz 2020.01
+    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+
+    Zwangerschapskaart:
+      access: MedMij-Certify
+  
+    _LoadResources:
+      access: My organization
+
+  FHIR3-0-2-MM201901-Cert:
+    validator: Nictiz 2019.01
+    destinations: Nictiz - Nictiz WildFHIR V201901 - FHIR 3.0.2
+    access: MedMij-Certify
+
+    _LoadResources:
+      access: My organization
+
+  FHIR3-0-2-MM201901-Test:
+    validator: Nictiz 2019.01
+    destinations: Nictiz - Nictiz WildFHIR V201901 - FHIR 3.0.2
+    access: MedMij-Testing
+
+    _LoadResources:
+      access: My organization
+
+  FHIR3-0-2-MM202001-Cert:
+    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    validator: Nictiz 2020.01
+    access: MedMij-Certify
+
+    _LoadResources:
+      access: My organization
+    
+    Questionnaires-2-0:
+      block until complete: true
+
+  FHIR3-0-2-MM202001-Test:
+    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    validator: Nictiz 2020.01
+    access: MedMij-Testing
+
+    _LoadResources:
+      access: My organization
+       
+    Questionnaires-2-0:
+      block until complete: true
+
+  FHIR3-0-2-MM202002-Cert:
+    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    validator: Nictiz 2020.01
+    access: MedMij-Certify
+
+    _LoadResources:
+      access: My organization
+    
+  FHIR3-0-2-MM202002-Test:
+    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    validator: Nictiz 2020.01
+    access: MedMij-Testing
+
+    _LoadResources:
+      access: My organization
+    
+  FHIR4-0-1-MedMij-Cert:
+    destinations: Nictiz - R4 MedMij - FHIR 4.0.1
+    validator: Nictiz-R4-nl-core
+    access: MedMij-Certify
+
+    _LoadResources:
+      access: My organization
+  
+  FHIR4-0-1-MedMij-Test:
+    destinations: Nictiz - R4 MedMij - FHIR 4.0.1
+    validator: Nictiz-R4-nl-core
+    access: MedMij-Testing
+
+    _LoadResources:
+      access: My organization
+
+  FHIR4-0-1-Test:
+    destinations: Nictiz - R4 MedMij - FHIR 4.0.1
+    validator: Nictiz-R4-nl-core
+    access: Nictiz-Testing
+
+    _LoadResources:
+      access: My organization
