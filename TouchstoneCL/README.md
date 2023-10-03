@@ -39,7 +39,7 @@ The default is to launch the "dev" version in Touchstone, unless the `--producti
 
 The script will default to "this monday" as the "date T" variable. This can be overridden using the `-T` option.
 
-After starting all executions, the script will poll the Touchstone API for the result until all executions are completed (unless the `--start-only flag is given`). When launching loadscripts (or targets where it's explicitly defined for), the script will stall until this Touchstone execution has finished.
+After starting all executions, the script will poll the Touchstone API for the result until all executions are completed (unless the `--start-only` flag is given). When launching loadscripts (or targets where it's explicitly defined for), the script will stall until this Touchstone execution has finished.
 
 Specifically for patch release work the `--jira-table` flag can be used to output the results in Jira table format.
 
