@@ -217,7 +217,7 @@ class KnownTargets:
             raise Exception(f"Couldn't get the destination(s) from the properties file for {target.rel_path}")
         return target
 
-class Launcher(mechanicalsoup.StatefulBrowser):
+class Touchstone(mechanicalsoup.StatefulBrowser):
     def __init__(self):
         super().__init__()
 
