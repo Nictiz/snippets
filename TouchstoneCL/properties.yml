@@ -96,6 +96,7 @@ production:
   FHIR3-0-2-eOverdracht4-0:
     destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
     validator: Nictiz 2020.01
+    block until complete: true
 
     Test:
       access: Nictiz-Testing
@@ -130,7 +131,7 @@ production:
           - Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
 
   FHIR3-0-2-Geboortezorg:
-    validators: Nictiz 2020.01
+    validator: Nictiz 2020.01
     destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
 
     Zwangerschapskaart:
