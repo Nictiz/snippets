@@ -9,6 +9,7 @@ dev:
   FHIR3-0-2-eOverdracht4-0:
     destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
     validator: Nictiz Dev
+    block until complete: true
 
     Test/Receiving-XIS:
       params:
@@ -38,7 +39,7 @@ dev:
 
   FHIR3-0-2-Geboortezorg:
     destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
-    validators: Nictiz Dev
+    validator: Nictiz Dev
   
   FHIR3-0-2-MM201901-Cert:
     destinations: Nictiz - Nictiz WildFHIR V201901-2 Dev - FHIR 3.0.2
@@ -46,6 +47,7 @@ dev:
   
   FHIR3-0-2-MM201901-Test:
     destinations: Nictiz - Nictiz WildFHIR V201901-2 Dev - FHIR 3.0.2
+    validator: Nictiz 2019.01
 
   FHIR3-0-2-MM202001-Cert:
     destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
@@ -78,7 +80,7 @@ dev:
     validator: Nictiz-R4-nl-core
 
   FHIR4-0-1-Test:
-    destinations: Nictiz - R4 MedMij - FHIR 4.0.1
+    destinations: Nictiz - R4 (NoAuth) (Dev) - FHIR 4.0.1
     validator: Nictiz-R4-nl-core
 
 production:
