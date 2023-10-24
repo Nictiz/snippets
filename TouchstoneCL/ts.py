@@ -288,9 +288,13 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
         parts = target.rel_path.split("/")
         parent_folder = "/".join(parts[:-1])
         leaf_folder = parts[-1]
-        response = self.open(f"https://touchstone.aegis.net/touchstone/testdefinitions?selectedTestGrp=/FHIRSandbox/Nictiz/{parent_folder}")
+        parent_group_path = "/FHIRSandbox/Nictiz"
+        if parent_folder != "":
+            parent_group_path += "/" + parent_folder
+        
+        response = self.open(f"https://touchstone.aegis.net/touchstone/testdefinitions?selectedTestGrp={parent_group_path}")
         if response.status_code != 200 or any(t.text.strip() == "Please select a node under Test Definitions." for t in self.page.find_all("span", class_="alertContent")):
-            print(f"Parent folder '{parent_folder} for target {target.rel_path} doesn't exist or cannot be accessed, cannot upload")
+            print(f"Parent folder '{parent_folder}' for target {target.rel_path} doesn't exist or cannot be accessed, cannot upload")
             sys.exit(1)
 
         # Create a zip file to upload
@@ -306,7 +310,7 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
         # Upload the file
         self.select_form('form[id="testGroupUploadForm"]')
         self["uploadFile"] = open(tmp_dir / f"{leaf_folder}.zip", "rb")
-        self["parentGroupPath"] = "/FHIRSandbox/Nictiz/" + parent_folder
+        self["parentGroupPath"] = parent_group_path
         self["canBeModifiedBy"] = "BY_MY_ORG"
 
         self["canBeViewedBy"] = "BY_MY_ORG_GROUP" # Default to this in case the actual access is one or more org groups. It will be overridden in the other situations.
