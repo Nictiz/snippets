@@ -84,10 +84,10 @@ dev:
     validator: Nictiz-R4-nl-core
 
 production:
-  access: My organization
   origins: AEGIS.net, Inc. - TouchstoneFHIR
 
   FHIR3-0-2-BgZ-MSZ-1-0:
+    access: Nictiz-Certify # As long as there's no Test subfolder, default to Certify for the base folder
     destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
     validator: Nictiz 2020.01
     Cert:
@@ -131,12 +131,10 @@ production:
           - Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
 
   FHIR3-0-2-Geboortezorg:
+    access: MedMij-Certify # As long as there's no Test subfolder, default to Certify for the base folder
     validator: Nictiz 2020.01
     destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
 
-    Zwangerschapskaart:
-      access: MedMij-Certify
-  
     _LoadResources:
       access: My organization
 
