@@ -3,11 +3,12 @@
 import argparse
 import collections
 import datetime
-import requests
+import enum
 import mechanicalsoup
 import os
 import pathlib
 import re
+import requests
 import shutil
 import sys
 import tempfile
@@ -218,6 +219,14 @@ class KnownTargets:
         return target
 
 class Touchstone(mechanicalsoup.StatefulBrowser):
+    MAX_PARALLEL_EXECUTIONS = 4
+
+    """ Enum for the different things we can wait for. """
+    class AwaitMode(enum.Enum):
+        ALL      = 0   # Await until all executions have finished
+        BLOCKING = 1   # Await only until all executions marked "blocking" have finished
+        MAX      = 2   # Await until the number of parallel executions is below MAX_PARLLEL_EXECUTIONS
+
     def __init__(self):
         super().__init__()
 
@@ -272,11 +281,10 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
             if target.block_until_complete and (start_only == False or targets.index(target) != len(unwrapped) - 1):
                 # We need to wait until completion if this has been defined. This is also true if the --start-only flag
                 # has been set, UNLESS we need to execute more scripts.
-                print("  execution needs to finish before we can continue, switching to status reporting")
-                self.awaitExecutions(True)
+                self.awaitExecutions(Touchstone.AwaitMode.BLOCKING)
 
         if not start_only:
-            self.awaitExecutions()
+            self.awaitExecutions(Touchstone.AwaitMode.ALL)
 
     def uploadTarget(self, target: UploadTarget):
         """ Upload a target to Touchstone. """
@@ -355,7 +363,10 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
 
     def executeTarget(self, target: ExecutionTarget):
         """ Execute one specific target, defined by a ExecutionTarget object """
-        print
+        
+        # First, wait until there are execution slots available
+        self.awaitExecutions(Touchstone.AwaitMode.MAX)
+
         print(f"- Setting up {target.rel_path}")
 
         # Navigate to the relevant target and select all testscripts that are not loadscripts
@@ -415,21 +426,33 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
         else:
             print(f"  couldn't start execution for {target.rel_path}")
 
-    def awaitExecutions(self, blocking_only = False):
+    def awaitExecutions(self, await_mode):
         """ Await the started executions by polling the Touchstone API, and report back the results. """
-        print("\n### Status ###")
-
-        if blocking_only:
+        
+        if await_mode == Touchstone.AwaitMode.BLOCKING:
             executions = [e for e in self.executions if e.target.block_until_complete and (e.status == "Running" or e.status == "")]
         else:
             executions = self.executions
 
-        last_polled_at = datetime.datetime(1970, 1, 1)
+        # Figure out if we actually do need to start waiting
+        if await_mode == Touchstone.AwaitMode.MAX:
+            need_to_wait = sum([1 for execution in executions if execution.status in ["Running", ""]]) >= self.MAX_PARALLEL_EXECUTIONS
+        else:
+            need_to_wait = any([True for execution in executions if execution.status in ["Running", ""]])
         
-        waiting = len(executions) > 0
-        while waiting:
-            
-            waiting = False
+        if need_to_wait:
+            if await_mode == Touchstone.AwaitMode.MAX:
+                print("  maximum number of parallel executions started, so we need to wait a bit before we can continue")
+            elif await_mode == Touchstone.AwaitMode.BLOCKING:
+                print("  execution needs to finish before we can continue")
+            else:
+                print("  waiting for all executions to finish")
+            print("\n### Status ###")
+
+        last_polled_at = datetime.datetime(1970, 1, 1)
+
+        waiting = need_to_wait
+        while waiting:          
             for execution in executions:
                 if execution.status == "" or execution.status == "Running":
                     sleep_time = 4 - (datetime.datetime.now() - last_polled_at).seconds
@@ -458,7 +481,6 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
                     line = "  Status couldn't be retrieved"
                 elif execution.status == "Running":
                     line = f"  {total_completed}/{execution.total} tests completed with {execution.passes} passes, {execution.warns} warnings and {execution.fails} failures (running for {execution.duration})"
-                    waiting = True
                 else:
                     line = "  "
                     line += "✅" if execution.status == "Passed" else "❌"
@@ -469,10 +491,21 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
                 print("\033[2K- " + execution.target.rel_path)
                 print("\033[2K" + line)
             
+            if await_mode == Touchstone.AwaitMode.MAX:
+                waiting = sum([1 for execution in executions if execution.status == "Running"]) >= self.MAX_PARALLEL_EXECUTIONS
+            else:
+                waiting = any([True for execution in executions if execution.status == "Running"])
+
             if waiting:
+                # Move the cursor to the beginning of the status report block
                 print(f"\033[{len(executions) * 2 + 1}A")
         
-        print("### End status ###\n")
+        if need_to_wait:
+            if await_mode == Touchstone.AwaitMode.ALL:
+                print("### End status ###\n")
+            else:
+                # If we were awaiting MAX or BLOCKING, the process flow continues so we need to erase everything
+                print(f"\033[{len(executions) * 2 + 2}A\033[J\033[A")
 
     def _selectOrigDest(self, type, values):
         """ Select origin or destination dropdowns on the Touchstone UI during execution setup.
