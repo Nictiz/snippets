@@ -16,7 +16,7 @@ if __name__ == "__main__":
         known_targets.list()
         print()
         folders = input("Please specify the folders to upload (space separated) ")
-        folders = [folder.strip() for folder in folders.split(" ")]
+        folders = [folder.strip() for folder in folders.split(" ") if folder.strip() != ""]
     else:
         folders = args.target
 

@@ -23,7 +23,7 @@ if __name__ == "__main__":
         known_targets.list(exclude_reference=True)
         print()
         folders = input("Please specify the folders to execute (space separated) ")
-        folders = [folder.strip() for folder in folders.split(" ")]
+        folders = [folder.strip() for folder in folders.split(" ") if folder.strip() != ""]
     else:
         folders = args.target
 
