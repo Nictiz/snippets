@@ -35,9 +35,15 @@ if __name__ == "__main__":
 
         if not args.start_only and args.jira_table:
             print("### Jira table ###")
+            print("||Target||Result||BITS||Opmerkingen||Execution")
             for execution in touchstone.executions:
                 line =  f"|{execution.target.rel_path}|"
-                line += "(/)" if execution.status == "Passed" else "(x)"
+                if execution.fails > 0:
+                    line += "(x)"
+                elif execution.warns > 0:
+                    line += "(?)"
+                else:
+                    line += "(/)"
                 if execution.fails > 0:
                     line += f"\n{execution.fails} x failures"
                 if execution.warns > 0:
