@@ -83,6 +83,10 @@ dev:
     destinations: Nictiz - R4 (NoAuth) (Dev) - FHIR 4.0.1
     validator: Nictiz-R4-nl-core
 
+  FHIR4-0-1-Cert:
+    destinations: Nictiz - R4 (NoAuth) (Dev) - FHIR 4.0.1
+    validator: Nictiz-R4-nl-core
+
 production:
   origins: AEGIS.net, Inc. - TouchstoneFHIR
 
@@ -218,6 +222,14 @@ production:
     destinations: Nictiz - R4 (NoAuth) - FHIR 4.0.1
     validator: Nictiz-R4-nl-core
     access: Nictiz-Testing
+
+    _LoadResources:
+      access: My organization
+
+  FHIR4-0-1-Cert:
+    destinations: Nictiz - R4 (NoAuth) - FHIR 4.0.1
+    validator: Nictiz-R4-nl-core
+    access: Nictiz-Certify
 
     _LoadResources:
       access: My organization
