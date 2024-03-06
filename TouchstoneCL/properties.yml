@@ -5,7 +5,11 @@ dev:
   FHIR3-0-2-BgZ-MSZ-1-0:
     destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
     validator: Nictiz Dev
-  
+
+  FHIR3-0-2-BgZ-MSZ-1-2:
+    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz Dev
+
   FHIR3-0-2-eOverdracht4-0:
     destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
     validator: Nictiz Dev
@@ -91,6 +95,16 @@ production:
   origins: AEGIS.net, Inc. - TouchstoneFHIR
 
   FHIR3-0-2-BgZ-MSZ-1-0:
+    access: Nictiz-Certify # As long as there's no Test subfolder, default to Certify for the base folder
+    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    validator: Nictiz 2020.01
+    Cert:
+      access: Nictiz-Certify
+  
+    _LoadResources:
+      access: My organization
+
+  FHIR3-0-2-BgZ-MSZ-1-2:
     access: Nictiz-Certify # As long as there's no Test subfolder, default to Certify for the base folder
     destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
     validator: Nictiz 2020.01
