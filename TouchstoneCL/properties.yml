@@ -41,6 +41,37 @@ dev:
         - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
         - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
 
+  FHIR3-0-2-EOVDR-4-1-beta:
+    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz Dev
+    block until complete: true
+
+    Test/Receiving-XIS:
+      params:
+        authorization-token-id: "1234"
+        notificationEndpoint: http://example.com/eOverdracht
+
+    Test/Sending-XIS-Nictiz-only:
+      origins:
+        - AEGIS.net, Inc. - TouchstoneFHIR
+        - AEGIS.net, Inc. - TouchstoneFHIR
+      destinations:
+        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+
+    Cert/Receiving-XIS:
+      params:
+        authorization-token-id: "1234"
+        notificationEndpoint: http://example.com/eOverdracht
+
+    Cert/Sending-XIS-Nictiz-only:
+      origins:
+        - AEGIS.net, Inc. - TouchstoneFHIR
+        - AEGIS.net, Inc. - TouchstoneFHIR
+      destinations:
+        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+
   FHIR3-0-2-Geboortezorg:
     destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
     validator: Nictiz Dev
