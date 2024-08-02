@@ -317,10 +317,10 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
         
         # Upload the file
         self.select_form('form[id="testGroupUploadForm"]')
-        self["uploadFile"] = open(tmp_dir / f"{leaf_folder}.zip", "rb")
+        zip_file = open(tmp_dir / f"{leaf_folder}.zip", "rb")
+        self["uploadFile"] = zip_file
         self["parentGroupPath"] = parent_group_path
         self["canBeModifiedBy"] = "BY_MY_ORG"
-
         self["canBeViewedBy"] = "BY_MY_ORG_GROUP" # Default to this in case the actual access is one or more org groups. It will be overridden in the other situations.
         for access in target.access:
             el = self.page.find(lambda tag: tag.name == "label" and tag.text.strip().lower() == access.lower())
@@ -335,6 +335,7 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
         ok_msg = f"The zip file '{leaf_folder}.zip' containing .* has been uploaded successfully"
         response = self.submit_selected()
 
+        zip_file.close()
         shutil.rmtree(tmp_dir)
 
         if response.status_code == 200 and any(re.search(ok_msg, t.text) for t in self.page.find_all("span", class_="alertContent")):
