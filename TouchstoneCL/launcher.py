@@ -43,7 +43,7 @@ if __name__ == "__main__":
                     line += "⚠️"
                 else:
                     line += "✅"
-                line += f" [{execution.target.rel_path}](https://touchstone.aegis.net/touchstone/execution?exec={execution.execution_id})"
+                line += f" [{execution.target.rel_path}](https://touchstonetest.aegis.net/touchstone/execution?exec={execution.execution_id})"
                 if execution.fails > 0 or execution.warns > 0:
                     line += ": "
                     if execution.fails > 0:

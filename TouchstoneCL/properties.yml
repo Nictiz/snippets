@@ -3,16 +3,16 @@ dev:
   origins: AEGIS.net, Inc. - TouchstoneFHIR
 
   FHIR3-0-2-BgZ-MSZ-1-0:
-    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
-    validator: Nictiz Dev
+    destinations: Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz 2020.01
 
   FHIR3-0-2-BgZ-MSZ-1-2:
-    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
-    validator: Nictiz Dev
+    destinations: Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz 2020.01
 
   FHIR3-0-2-eOverdracht4-0:
-    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
-    validator: Nictiz Dev
+    destinations: Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz 2020.01
     block until complete: true
 
     Test/Receiving-XIS:
@@ -25,8 +25,8 @@ dev:
         - AEGIS.net, Inc. - TouchstoneFHIR
         - AEGIS.net, Inc. - TouchstoneFHIR
       destinations:
-        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
-        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+        - Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+        - Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
 
     Cert/Receiving-XIS:
       params:
@@ -38,12 +38,12 @@ dev:
         - AEGIS.net, Inc. - TouchstoneFHIR
         - AEGIS.net, Inc. - TouchstoneFHIR
       destinations:
-        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
-        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+        - Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+        - Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
 
   FHIR3-0-2-EOVDR-4-1-beta:
-    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
-    validator: Nictiz Dev
+    destinations: Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz 2020.01
     block until complete: true
 
     Test/Receiving-XIS:
@@ -56,8 +56,8 @@ dev:
         - AEGIS.net, Inc. - TouchstoneFHIR
         - AEGIS.net, Inc. - TouchstoneFHIR
       destinations:
-        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
-        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+        - Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+        - Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
 
     Cert/Receiving-XIS:
       params:
@@ -69,57 +69,57 @@ dev:
         - AEGIS.net, Inc. - TouchstoneFHIR
         - AEGIS.net, Inc. - TouchstoneFHIR
       destinations:
-        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
-        - Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+        - Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+        - Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
 
   FHIR3-0-2-Geboortezorg:
-    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
-    validator: Nictiz Dev
+    destinations: Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz 2020.01
   
   FHIR3-0-2-MM201901-Cert:
-    destinations: Nictiz - Nictiz WildFHIR V201901-2 Dev - FHIR 3.0.2
+    destinations: Nictiz - STG Nictiz WildFHIR V201901-2 Dev - FHIR 3.0.2
     validator: Nictiz 2019.01
   
   FHIR3-0-2-MM201901-Test:
-    destinations: Nictiz - Nictiz WildFHIR V201901-2 Dev - FHIR 3.0.2
+    destinations: Nictiz - STG Nictiz WildFHIR V201901-2 Dev - FHIR 3.0.2
     validator: Nictiz 2019.01
 
   FHIR3-0-2-MM202001-Cert:
-    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
-    validator: Nictiz Dev
+    destinations: Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz 2020.01
     
     Questionnaires-2-0:
       block until complete: true
 
   FHIR3-0-2-MM202001-Test:
-    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
-    validator: Nictiz Dev
+    destinations: Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz 2020.01
     
     Questionnaires-2-0:
       block until complete: true
 
   FHIR3-0-2-MM202002-Cert:
-    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
-    validator: Nictiz Dev
+    destinations: Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz 2020.01
     
   FHIR3-0-2-MM202002-Test:
-    destinations: Nictiz - Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
-    validator: Nictiz Dev
+    destinations: Nictiz - STG Nictiz WildFHIR V202001-Dev - FHIR 3.0.2
+    validator: Nictiz 2020.01
     
   FHIR4-0-1-MedMij-Cert:
-    destinations: Nictiz - R4 MedMij (Dev) - FHIR 4.0.1
+    destinations: Nictiz - STG Nictiz WildFHIR R4 MedMij Dev - FHIR 4.0.1
     validator: Nictiz-R4-nl-core
   
   FHIR4-0-1-MedMij-Test:
-    destinations: Nictiz - R4 MedMij (Dev) - FHIR 4.0.1
+    destinations: Nictiz - STG Nictiz WildFHIR R4 MedMij Dev - FHIR 4.0.1
     validator: Nictiz-R4-nl-core
 
   FHIR4-0-1-Test:
-    destinations: Nictiz - R4 (NoAuth) (Dev) - FHIR 4.0.1
+    destinations: Nictiz - STG Nictiz WildFHIR R4 Dev - FHIR 4.0.1
     validator: Nictiz-R4-nl-core
 
   FHIR4-0-1-Cert:
-    destinations: Nictiz - R4 (NoAuth) (Dev) - FHIR 4.0.1
+    destinations: Nictiz - STG Nictiz WildFHIR R4 Dev - FHIR 4.0.1
     validator: Nictiz-R4-nl-core
 
 production:
@@ -127,7 +127,7 @@ production:
 
   FHIR3-0-2-BgZ-MSZ-1-0:
     access: Nictiz-Certify # As long as there's no Test subfolder, default to Certify for the base folder
-    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    destinations: Nictiz - STG Nictiz WildFHIR V202001 - FHIR 3.0.2
     validator: Nictiz 2020.01
     Cert:
       access: Nictiz-Certify
@@ -137,7 +137,7 @@ production:
 
   FHIR3-0-2-BgZ-MSZ-1-2:
     access: Nictiz-Certify # As long as there's no Test subfolder, default to Certify for the base folder
-    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    destinations: Nictiz - STG Nictiz WildFHIR V202001 - FHIR 3.0.2
     validator: Nictiz 2020.01
     Cert:
       access: Nictiz-Certify
@@ -146,7 +146,7 @@ production:
       access: My organization
 
   FHIR3-0-2-eOverdracht4-0:
-    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    destinations: Nictiz - STG Nictiz WildFHIR V202001 - FHIR 3.0.2
     validator: Nictiz 2020.01
     block until complete: true
 
@@ -163,8 +163,8 @@ production:
           - AEGIS.net, Inc. - TouchstoneFHIR
           - AEGIS.net, Inc. - TouchstoneFHIR
         destinations:
-          - Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
-          - Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+          - Nictiz - STG Nictiz WildFHIR V202001 - FHIR 3.0.2
+          - Nictiz - STG Nictiz WildFHIR V202001 - FHIR 3.0.2
 
     Cert:
       access: Nictiz-Certify
@@ -179,8 +179,8 @@ production:
           - AEGIS.net, Inc. - TouchstoneFHIR
           - AEGIS.net, Inc. - TouchstoneFHIR
         destinations:
-          - Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
-          - Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+          - Nictiz - STG Nictiz WildFHIR V202001 - FHIR 3.0.2
+          - Nictiz - STG Nictiz WildFHIR V202001 - FHIR 3.0.2
 
     _LoadResources:
       access: My organization
@@ -188,14 +188,14 @@ production:
   FHIR3-0-2-Geboortezorg:
     access: MedMij-Certify # As long as there's no Test subfolder, default to Certify for the base folder
     validator: Nictiz 2020.01
-    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    destinations: Nictiz - STG Nictiz WildFHIR V202001 - FHIR 3.0.2
 
     _LoadResources:
       access: My organization
 
   FHIR3-0-2-MM201901-Cert:
     validator: Nictiz 2019.01
-    destinations: Nictiz - Nictiz WildFHIR V201901 - FHIR 3.0.2
+    destinations: Nictiz - STG Nictiz WildFHIR V201901 - FHIR 3.0.2
     access: MedMij-Certify
 
     _LoadResources:
@@ -203,14 +203,14 @@ production:
 
   FHIR3-0-2-MM201901-Test:
     validator: Nictiz 2019.01
-    destinations: Nictiz - Nictiz WildFHIR V201901 - FHIR 3.0.2
+    destinations: Nictiz - STG Nictiz WildFHIR V201901 - FHIR 3.0.2
     access: MedMij-Testing
 
     _LoadResources:
       access: My organization
 
   FHIR3-0-2-MM202001-Cert:
-    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    destinations: Nictiz - STG Nictiz WildFHIR V202001 - FHIR 3.0.2
     validator: Nictiz 2020.01
     access: MedMij-Certify
 
@@ -221,7 +221,7 @@ production:
       block until complete: true
 
   FHIR3-0-2-MM202001-Test:
-    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    destinations: Nictiz - STG Nictiz WildFHIR V202001 - FHIR 3.0.2
     validator: Nictiz 2020.01
     access: MedMij-Testing
 
@@ -232,7 +232,7 @@ production:
       block until complete: true
 
   FHIR3-0-2-MM202002-Cert:
-    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    destinations: Nictiz - STG Nictiz WildFHIR V202001 - FHIR 3.0.2
     validator: Nictiz 2020.01
     access: MedMij-Certify
 
@@ -240,7 +240,7 @@ production:
       access: My organization
     
   FHIR3-0-2-MM202002-Test:
-    destinations: Nictiz - Nictiz WildFHIR V202001 - FHIR 3.0.2
+    destinations: Nictiz - STG Nictiz WildFHIR V202001 - FHIR 3.0.2
     validator: Nictiz 2020.01
     access: MedMij-Testing
 
@@ -248,7 +248,7 @@ production:
       access: My organization
     
   FHIR4-0-1-MedMij-Cert:
-    destinations: Nictiz - R4 MedMij - FHIR 4.0.1
+    destinations: Nictiz - STG Nictiz WildFHIR R4 MedMij - FHIR 4.0.1
     validator: Nictiz-R4-nl-core
     access: MedMij-Certify
 
@@ -256,7 +256,7 @@ production:
       access: My organization
   
   FHIR4-0-1-MedMij-Test:
-    destinations: Nictiz - R4 MedMij - FHIR 4.0.1
+    destinations: Nictiz - STG Nictiz WildFHIR R4 MedMij - FHIR 4.0.1
     validator: Nictiz-R4-nl-core
     access: MedMij-Testing
 
@@ -264,7 +264,7 @@ production:
       access: My organization
 
   FHIR4-0-1-Test:
-    destinations: Nictiz - R4 (NoAuth) - FHIR 4.0.1
+    destinations: Nictiz - STG Nictiz WildFHIR R4 (NoAuth) - FHIR 4.0.1
     validator: Nictiz-R4-nl-core
     access: Nictiz-Testing
 
@@ -272,7 +272,7 @@ production:
       access: My organization
 
   FHIR4-0-1-Cert:
-    destinations: Nictiz - R4 (NoAuth) - FHIR 4.0.1
+    destinations: Nictiz - STG Nictiz WildFHIR R4 (NoAuth) - FHIR 4.0.1
     validator: Nictiz-R4-nl-core
     access: Nictiz-Certify
 

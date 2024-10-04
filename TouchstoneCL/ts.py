@@ -244,7 +244,7 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
 
     def loginFrontend(self):
         """ Login to the Touchstone website. It requires the environment variables TS_USER and TS_PASS to be set. """
-        self.open("https://touchstone.aegis.net/touchstone/login")
+        self.open("https://touchstonetest.aegis.net/touchstone/login")
 
         self.select_form('form[id="loginForm"]')
         self["emailOrLoginID"] = os.environ["TS_USER"]
@@ -254,7 +254,7 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
             sys.exit("Couldn't login into Touchstone")
 
     def logoutFrontend(self):
-        self.open("https://touchstone.aegis.net/touchstone/logout")
+        self.open("https://touchstonetest.aegis.net/touchstone/logout")
 
     def apiKey(self):
         """ Return the API-Key value needed for using the Touchstone API. If this key is not yet known, a new API
@@ -265,7 +265,7 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
                 "email": os.environ["TS_USER"],
                 "password": os.environ["TS_PASS"]
             }
-            response = requests.post("https://touchstone.aegis.net/touchstone/api/authenticate", json=body)
+            response = requests.post("https://touchstonetest.aegis.net/touchstone/api/authenticate", json=body)
             if response.status_code != 201 or "API-Key" not in response.json():
                 sys.exit("Couldn't login into the Touchstone API")
             self.__api_key = response.json()["API-Key"]
@@ -300,7 +300,7 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
         if parent_folder != "":
             parent_group_path += "/" + parent_folder
         
-        response = self.open(f"https://touchstone.aegis.net/touchstone/testdefinitions?selectedTestGrp={parent_group_path}")
+        response = self.open(f"https://touchstonetest.aegis.net/touchstone/testdefinitions?selectedTestGrp={parent_group_path}")
         if response.status_code != 200 or any(t.text.strip() == "Please select a node under Test Definitions." for t in self.page.find_all("span", class_="alertContent")):
             print(f"Parent folder '{parent_folder}' for target {target.rel_path} doesn't exist or cannot be accessed, cannot upload")
             sys.exit(1)
@@ -371,7 +371,7 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
         print(f"- Setting up {target.rel_path}")
 
         # Navigate to the relevant target and select all testscripts that are not loadscripts
-        self.open(f"https://touchstone.aegis.net/touchstone/testdefinitions?selectedTestGrp=/FHIRSandbox/Nictiz/{target.rel_path}&activeOnly=true&contentEntry=TEST_SCRIPTS&ps=200")
+        self.open(f"https://touchstonetest.aegis.net/touchstone/testdefinitions?selectedTestGrp=/FHIRSandbox/Nictiz/{target.rel_path}&activeOnly=true&contentEntry=TEST_SCRIPTS&ps=200")
         select_all = True
         self.select_form('form[id="testDefSearch"]')
         selected_testscripts = []
@@ -422,7 +422,7 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
         response = self.submit_selected()
         if response.status_code == 200:
             print(f"  execution started on {self.url}")
-            execution_id = self.url.replace("https://touchstone.aegis.net/touchstone/execution?exec=", "")
+            execution_id = self.url.replace("https://touchstonetest.aegis.net/touchstone/execution?exec=", "")
             self.executions.append(Execution(target, execution_id))
         else:
             print(f"  couldn't start execution for {target.rel_path}")
@@ -458,7 +458,7 @@ class Touchstone(mechanicalsoup.StatefulBrowser):
                 if execution.status == "" or execution.status == "Running":
                     sleep_time = 4 - (datetime.datetime.now() - last_polled_at).seconds
                     if sleep_time > 0: time.sleep(sleep_time)
-                    response = requests.get("https://touchstone.aegis.net/touchstone/api/testExecution/" + execution.execution_id, headers = {
+                    response = requests.get("https://touchstonetest.aegis.net/touchstone/api/testExecution/" + execution.execution_id, headers = {
                         "API-Key": self.apiKey(),
                         "Accept": "application/json"
                     })
