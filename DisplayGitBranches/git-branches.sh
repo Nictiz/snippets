@@ -16,7 +16,7 @@ function git-branches {
   nictizgits=~/Development/GitHub/Nictiz
   echo Repository,Branch>~/gb.txt
   echo ----------------------------------------,------------------------------>>~/gb.txt
-  for d in `ls $nictizgits`; do
+  for d in `ls $nictizgits | sort --ignore-case`; do
     #  echo ::: $d
     if [ -d $nictizgits/$d/.git ]; then
       b=`git -C $nictizgits/$d branch --show-current`
