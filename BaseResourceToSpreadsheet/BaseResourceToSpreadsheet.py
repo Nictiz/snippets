@@ -9,7 +9,7 @@ import shutil
 from openpyxl.worksheet.datavalidation import DataValidation
 
 class BaseResourceToSpreadsheet:
-    COLUMNS = ["Element", "Aliases", "Card", "Type", "Binding", "Definition", "Requirements", "Dekking", "Aanvullende informatie"]
+    COLUMNS = ["Element", "Aliases", "Card", "Type", "Binding", "Definition", "Requirements", "Dekking", "Aanvullende informatie", "Obligations: Registrerend systeem", "Obligations: Ontsluitend systeem", "Obligations: Verwerkend systeem"]
 
     def __init__(self, fhir_version, output_folder):
         self.fhir_version = fhir_version
@@ -50,7 +50,7 @@ class BaseResourceToSpreadsheet:
             card = f"{el["min"]}..{el["max"]}"
             types = self.__typeToTypeString__(el["type"]) if "type" in el else "Resource"
             definition = el["definition"]
-            df.loc[len(df)] = [path, "", card, types, "", definition, "", "", ""]
+            df.loc[len(df)] = [path, "", card, types, "", definition, "", "", "", "", "", ""]
 
         return df
 
@@ -73,16 +73,20 @@ class DataValidationAdder:
 
     def addValidation(self, workbook_path):
         workbook = openpyxl.load_workbook(workbook_path)
-        headers = {cell.value: cell.column_letter for cell in workbook["Structure"][1]}
-        for header in headers:
-            legend_name = "Legenda" + header.capitalize()
+        headers = {cell.column_letter: cell.value.split(":")[0] for cell in workbook["Structure"][1]}
+        for col in headers:
+            legend_name = "Legenda" + headers[col]
             if legend_name in self.template:
                 self.__copySheet__(workbook, legend_name)
-                self.__addDataValidation__(workbook, legend_name, headers[header])
+                self.__addDataValidation__(workbook, legend_name, col)
 
         workbook.save(workbook_path)
 
     def __copySheet__(self, workbook, sheet_name):
+        if sheet_name in workbook:
+            # Don't add it if it already exists
+            return
+
         new_sheet = workbook.create_sheet(sheet_name)
         for row in self.template[sheet_name].iter_rows():
             for cell in row:
