@@ -46,7 +46,7 @@ class BaseResourceToSpreadsheet:
             card = f"{el["min"]}..{el["max"]}"
             types = self.__typeToTypeString__(el["type"]) if "type" in el else "Resource"
             definition = el["definition"]
-            df.loc[len(df)] = [path, "", card, types, "", definition, "", "", "", "", "", ""]
+            df.loc[len(df)] = [path, "", card, types, "", "", definition, "", "", "", "", "", ""]
 
         return df
 
