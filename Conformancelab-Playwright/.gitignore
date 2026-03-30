@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+test-results/
+utils/auth/state.json
+.github/
+archive/
+utils/scripts/
+CL-test.code-workspace
+.vscode/
