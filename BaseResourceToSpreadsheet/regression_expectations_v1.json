@@ -1,0 +1,230 @@
+{
+  "blood_pressure": {
+    "archetype": "openEHR-EHR-OBSERVATION.blood_pressure.v2",
+    "contains": [
+      {
+        "element": "24 hour average (events)",
+        "type": "INTERVAL_EVENT"
+      },
+      {
+        "element": "Math function (24 hour average)",
+        "type_contains": "DV_CODED_TEXT",
+        "definition_contains": "mean"
+      },
+      {
+        "element": "Width (24 hour average)",
+        "type_contains": "DV_DURATION"
+      },
+      {
+        "element": "Any event (events)",
+        "type_contains": "EVENT"
+      }
+    ],
+    "indented_under": [
+      {
+        "parent": "24 hour average (events)",
+        "child_contains": "Systolic"
+      },
+      {
+        "parent": "24 hour average (events)",
+        "child_contains": "Diastolic"
+      },
+      {
+        "parent": "Any event (events)",
+        "child_contains": "Systolic"
+      }
+    ],
+    "absent": [
+      {
+        "element_contains": "Language"
+      },
+      {
+        "element_contains": "Encoding"
+      },
+      {
+        "element_contains": "Guideline id"
+      },
+      {
+        "element_contains": "Workflow id"
+      }
+    ]
+  },
+  "pulse": {
+    "archetype": "openEHR-EHR-OBSERVATION.pulse.v2",
+    "contains": [
+      {
+        "element": "Maximum (events)",
+        "type": "INTERVAL_EVENT"
+      },
+      {
+        "element": "Math function (Maximum)",
+        "type_contains": "DV_CODED_TEXT",
+        "definition_contains": "maximum"
+      },
+      {
+        "element": "Exertion",
+        "type": "SLOT (CLUSTER)",
+        "definition_contains_all": [
+          "Includes:",
+          "level_of_exertion"
+        ]
+      },
+      {
+        "element": "Method",
+        "type_contains": "DV_CODED_TEXT",
+        "definition_contains_any": [
+          "Palpation",
+          "Auscultation",
+          "Automatic"
+        ]
+      }
+    ],
+    "indented_under": [
+      {
+        "parent": "Maximum (events)",
+        "child_contains": "Rate"
+      },
+      {
+        "parent": "Maximum (events)",
+        "child_contains": "Regular"
+      }
+    ],
+    "absent": [
+      {
+        "element_contains": "Language"
+      },
+      {
+        "element_contains": "Encoding"
+      },
+      {
+        "element_contains": "Guideline id"
+      },
+      {
+        "element_contains": "Workflow id"
+      }
+    ]
+  },
+  "ecg_result": {
+    "archetype": "openEHR-EHR-OBSERVATION.ecg_result.v1",
+    "contains": [
+      {
+        "element": "Per lead",
+        "type": "CLUSTER"
+      },
+      {
+        "element": "Per lead",
+        "type_contains": "DV_CODED_TEXT",
+        "definition_contains_any": [
+          "lead",
+          "v1",
+          "v6",
+          "avr",
+          "avl",
+          "avf"
+        ]
+      },
+      {
+        "element": "Device",
+        "type": "SLOT (CLUSTER)",
+        "definition_contains_all": [
+          "Includes:",
+          "device"
+        ]
+      }
+    ],
+    "absent": [
+      {
+        "element_contains": "Language"
+      },
+      {
+        "element_contains": "Encoding"
+      },
+      {
+        "element_contains": "Guideline id"
+      },
+      {
+        "element_contains": "Workflow id"
+      }
+    ]
+  },
+  "differential_diagnoses": {
+    "archetype": "openEHR-EHR-EVALUATION.differential_diagnoses.v1",
+    "contains": [
+      {
+        "element": "Per differential",
+        "type": "CLUSTER"
+      }
+    ],
+    "absent": [
+      {
+        "element_contains": "Language"
+      },
+      {
+        "element_contains": "Encoding"
+      },
+      {
+        "element_contains": "Guideline id"
+      },
+      {
+        "element_contains": "Workflow id"
+      }
+    ]
+  },
+  "problem_diagnosis": {
+    "archetype": "openEHR-EHR-EVALUATION.problem_diagnosis.v1",
+    "contains": [
+      {
+        "element": "Severity",
+        "definition_contains_any": [
+          "Mild",
+          "Moderate",
+          "Severe"
+        ]
+      }
+    ],
+    "absent": [
+      {
+        "element_contains": "Language"
+      },
+      {
+        "element_contains": "Encoding"
+      },
+      {
+        "element_contains": "Guideline id"
+      },
+      {
+        "element_contains": "Workflow id"
+      }
+    ]
+  },
+  "procedure": {
+    "archetype": "openEHR-EHR-ACTION.procedure.v1",
+    "contains": [
+      {
+        "element_contains": "ism_transition/careflow_step",
+        "type_contains": "DV_CODED_TEXT",
+        "card": "conditional",
+        "definition_contains_all": [
+          "Careflow step:",
+          "Current state:",
+          "openehr::"
+        ],
+        "info_contains": "path=ism_transition"
+      }
+    ],
+    "absent": [
+      {
+        "element_contains": "Language"
+      },
+      {
+        "element_contains": "Encoding"
+      },
+      {
+        "element_contains": "Guideline id"
+      },
+      {
+        "element_contains": "Workflow id"
+      }
+    ]
+  }
+}
