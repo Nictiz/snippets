@@ -40,6 +40,7 @@ import pandas as pd
 import requests
 from openpyxl.worksheet.datavalidation import DataValidation
 
+import templatemixer
 
 # ---------------------------------------------------------------------------
 # Logging and filesystem safety helpers
@@ -81,17 +82,7 @@ class ArchetypeToSpreadsheet:
     """Coordinate CKM lookup, XML download, parsing and Excel writing."""
     SUPPRESSED_RM_PATHS = {"language", "encoding", "guideline_id", "workflow_id"}
 
-    COLUMNS = [
-        "Element",
-        "Aliases",
-        "Card",
-        "Type",
-        "Binding",
-        "Definition",
-        "Requirements",
-        "Dekking",
-        "Aanvullende informatie",
-    ]
+    COLUMNS = ["Element", "Aliases", "Card", "Type", "Binding", "Additional binding", "Definition", "Requirements", "Dekking", "Aanvullende informatie", "Obligations: Registrerend systeem", "Obligations: Ontsluitend systeem", "Obligations: Verwerkend systeem"]
 
     CKM_BASE = "https://ckm.openehr.org/ckm/rest/v1"
 
@@ -255,9 +246,9 @@ class ArchetypeToSpreadsheet:
         return rows
 
     def _derive_base_name(self, archetype_id: str) -> str:
-        match = re.match(r"^openEHR-[A-Z]+-[A-Z_]+\.(.+?)\.v\d+$", archetype_id, flags=re.IGNORECASE)
+        match = re.match(r"^openEHR-[A-Z]+-([A-Z_]+)\.(.+?)\.(v\d+)$", archetype_id, flags=re.IGNORECASE)
         if match:
-            name = match.group(1)
+            name = f"{match.group(1)}.{match.group(2)}.{match.group(3)}"
         else:
             name = archetype_id
         name = re.sub(r"[^A-Za-z0-9_.-]+", "_", name)
@@ -535,8 +526,8 @@ class WorkbookWriter:
 
     def write_rows(self, rows: List["MappingRow"], output_folder: pathlib.Path, base_name: str) -> pathlib.Path:
         dataframe = self._build_dataframe(rows)
-        workbook_path = output_folder / f"{base_name}_base.xlsx"
-        sheet_name = self.safe_sheet_name(f"{base_name}_base")
+        workbook_path = output_folder / f"{base_name}.xlsx"
+        sheet_name = "Structure"
 
         ensure_output_path_writable(workbook_path, "Excel output file")
         with pd.ExcelWriter(workbook_path, engine="openpyxl") as writer:
@@ -547,11 +538,6 @@ class WorkbookWriter:
 
     def _build_dataframe(self, rows: List["MappingRow"]) -> pd.DataFrame:
         return pd.DataFrame([row.to_list() for row in rows], columns=self.columns)
-
-    @staticmethod
-    def safe_sheet_name(name: str) -> str:
-        cleaned = re.sub(r"[:\\/*?\[\]]", "_", name)
-        return cleaned[:31] or "Sheet1"
 
     @staticmethod
     def row_depth_from_info(info: str) -> int:
@@ -616,10 +602,14 @@ class MappingRow:
     card: str = ""
     datatype: str = ""
     binding: str = ""
+    additional_binding: str = ""
     definition: str = ""
     requirements: str = ""
     coverage: str = ""
     info: str = ""
+    obligations_registrerend_systeem: str = ""
+    obligations_ontsluitend_systeem: str = ""
+    obligations_verwerkend_systeem: str = ""
 
     def to_list(self) -> List[str]:
         return [
@@ -628,10 +618,14 @@ class MappingRow:
             self.card,
             self.datatype,
             self.binding,
+            self.additional_binding,
             self.definition,
             self.requirements,
             self.coverage,
             self.info,
+            self.obligations_registrerend_systeem,
+            self.obligations_ontsluitend_systeem,
+            self.obligations_verwerkend_systeem
         ]
 
 
@@ -1732,64 +1726,6 @@ class ArchetypeXmlParser:
 
 
 # ---------------------------------------------------------------------------
-# Optional template-based validation and legend copying
-# ---------------------------------------------------------------------------
-class DataValidationAdder:
-    """Copy validation sheets from a template workbook into the generated output."""
-    def __init__(self, template_path: str):
-        self.template = openpyxl.load_workbook(pathlib.Path(template_path))
-
-    def add_validation(self, workbook_path: pathlib.Path) -> None:
-        """Apply template-driven list validation and legend sheets to the output workbook."""
-        ensure_output_path_writable(workbook_path, "Excel output file")
-        workbook = openpyxl.load_workbook(workbook_path)
-        structure_sheet = workbook[workbook.sheetnames[0]]
-        headers = {cell.value: cell.column_letter for cell in structure_sheet[1]}
-        for header in headers:
-            legend_name = "Legenda" + str(header).capitalize()
-            if legend_name in self.template:
-                self._copy_sheet(workbook, legend_name)
-                self._add_data_validation(workbook, structure_sheet.title, legend_name, headers[header])
-        ensure_output_path_writable(workbook_path, "Excel output file")
-        workbook.save(workbook_path)
-
-    def _copy_sheet(self, workbook: openpyxl.Workbook, sheet_name: str) -> None:
-        new_sheet = workbook.create_sheet(sheet_name)
-        for row in self.template[sheet_name].iter_rows():
-            for cell in row:
-                new_cell = new_sheet[cell.coordinate]
-                new_cell.value = cell.value
-                if cell.has_style:
-                    new_cell.font = copy.copy(cell.font)
-                    new_cell.border = copy.copy(cell.border)
-                    new_cell.fill = copy.copy(cell.fill)
-                    new_cell.number_format = cell.number_format
-                    new_cell.protection = copy.copy(cell.protection)
-                    new_cell.alignment = copy.copy(cell.alignment)
-
-    def _add_data_validation(self, workbook: openpyxl.Workbook, target_sheet_name: str, legend_name: str, column: str) -> None:
-        max_row = len(list(workbook[legend_name].rows))
-        formula = f"={legend_name}!$A$2:$A${max_row + 1}"
-        dv = DataValidation(type="list", formula1=formula, allow_blank=True)
-        workbook[target_sheet_name].add_data_validation(dv)
-        dv.add(f"{column}2:{column}1000")
-
-        for row in range(2, max_row + 3):
-            cell = workbook[legend_name].cell(row, 1)
-            if cell.fill.fgColor.rgb != "00000000":
-                rule = openpyxl.formatting.rule.CellIsRule(
-                    operator="equal",
-                    formula=[f'{legend_name}!${cell.column_letter}${cell.row}'],
-                    fill=openpyxl.styles.PatternFill(
-                        start_color=cell.fill.fgColor.rgb,
-                        end_color=cell.fill.fgColor.rgb,
-                        fill_type="solid",
-                    ),
-                )
-                workbook[target_sheet_name].conditional_formatting.add(f"{column}2:{column}1000", rule)
-
-
-# ---------------------------------------------------------------------------
 # CLI entry point
 # ---------------------------------------------------------------------------
 def main(argv: List[str]) -> int:
@@ -1833,8 +1769,8 @@ def main(argv: List[str]) -> int:
     print(f"Created: {out_path}")
 
     if args.template:
-        DataValidationAdder(args.template).add_validation(out_path)
-        print(f"Added validations from template: {args.template}")
+        mixer = templatemixer.TemplateMixer(args.template)
+        mixer.mix(out_path)
 
     return 0
 
