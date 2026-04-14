@@ -93,8 +93,11 @@ class ArchetypeToSpreadsheet:
         "Binding",
         "Additional binding",
         "Definition",
-        "Obligations",
+        "Requirements",
         "Dekking",
+        "Obligations: Registrerend systeem", 
+        "Obligations: Ontsluitend systeem", 
+        "Obligations: Verwerkend systeem",
         "Aanvullende informatie",
     ]
 
@@ -625,6 +628,9 @@ class MappingRow:
     definition: str = ""
     requirements: str = ""
     coverage: str = ""
+    obligations_registrerend_systeem: str = ""
+    obligations_ontsluitend_systeem: str = ""
+    obligations_verwerkend_systeem: str = ""
     info: str = ""
 
     def to_list(self) -> List[str]:
@@ -638,6 +644,9 @@ class MappingRow:
             self.definition,
             self.requirements,
             self.coverage,
+            self.obligations_registrerend_systeem,
+            self.obligations_ontsluitend_systeem,
+            self.obligations_verwerkend_systeem,
             self.info,
         ]
 
