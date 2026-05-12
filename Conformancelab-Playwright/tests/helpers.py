@@ -1,16 +1,14 @@
-from playwright.sync_api import Page,Locator, expect
+from playwright.sync_api import Page, Locator, expect
 from utils.common.logger import setup_logger
 import time
 import re
 from typing import Optional, Union, List
-import time
-import subprocess
-import os
 from datetime import date, timedelta
 import json
 import urllib.parse
 
 logger = setup_logger()
+
 
 def check_text_order_soft(page: Page, before_text: str, after_text: str, errors: list):
     items = page.locator("div.provisioning-instance a.instance-name").all_inner_texts()
@@ -19,99 +17,100 @@ def check_text_order_soft(page: Page, before_text: str, after_text: str, errors:
         index_before = next(i for i, t in enumerate(items) if before_text in t)
         index_after = next(i for i, t in enumerate(items) if after_text in t)
     except StopIteration:
-        msg = f"❌ Niet gevonden: '{before_text}' of '{after_text}'"
+        msg = f"Not found: '{before_text}' or '{after_text}'"
         logger.error(msg)
         errors.append(msg)
         return
 
     if index_before < index_after:
-        logger.info(f"✅ '{after_text}' komt ná '{before_text}' (posities: {index_after} > {index_before})")
+        logger.info(f"'{after_text}' appears after '{before_text}' (positions: {index_after} > {index_before})")
     else:
-        msg = f"⚠️ '{after_text}' komt niet ná '{before_text}' (posities: {index_after} >! {index_before})"
+        msg = f"'{after_text}' does not appear after '{before_text}' (positions: {index_after} >! {index_before})"
         logger.warning(msg)
         errors.append(msg)
 
 
-def login_check(locator: Locator, foutmelding: str = "Inloggen is mislukt"):
+def login_check(locator: Locator, error_message: str = "Login failed"):
     try:
         expect(locator).to_be_visible()
     except AssertionError:
-        logger.error(foutmelding)
-        raise AssertionError(foutmelding)
+        logger.error(error_message)
+        raise AssertionError(error_message)
+
 
 def fill_t_date(page):
-    from datetime import date, timedelta
-    c_datum = date.today()
-    t_datum = c_datum - timedelta(days=(c_datum.weekday()))
-    t_datum = t_datum.strftime("%Y-%m-%d")
+    current_date = date.today()
+    t_date = current_date - timedelta(days=(current_date.weekday()))
+    t_date = t_date.strftime("%Y-%m-%d")
 
     group = page.locator("p-input-group").filter(
     has=page.locator("p-inputgroup-addon").filter(has_text=re.compile(r"^T$")))
 
     if group.count() == 0:
-        return  # Geen T-datum veld gevonden
+        return
 
     input_field = group.locator("input.p-inputtext")
     if not input_field.is_visible():
-        return  # Geen zichtbaar invoerveld gevonden
+        return
 
     expect(input_field).to_be_visible()
-    input_field.fill(t_datum)
+    input_field.fill(t_date)
     group.get_by_role("button", name="Apply").click()
-    logger.info(f"✅ T-datum ingevuld met {t_datum}")
+    logger.info(f"T-date filled with {t_date}")
 
 
 def wait_for_ready_or_fail_on_interrupted(page, timeout=600):
     """
-    Wacht totdat #instanceState 'Ready' toont.
-    Stopt direct met een AssertionError als status 'interrupted' bevat.
-    Logt voortgang elke 5 seconden.
+    Wait until #instanceState shows 'Ready'.
+    Fails immediately when the status contains 'interrupted'.
+    Polls every 5 seconds.
 
     :param page: Playwright page object
-    :param timeout: maximale wachttijd in seconden
+    :param timeout: maximum wait time in seconds
     """
-    poll_interval = 5  # seconden
+    poll_interval = 5
     elapsed = 0
 
     while elapsed < timeout:
         status = page.locator("#instanceState").inner_text().lower()
         if "ready" in status:
-            logger.info(f"✅ Status is Ready (na {elapsed}s)")
+            logger.info(f"Status is Ready after {elapsed}s")
             return
         elif "interrupted" in status:
-            logger.error(f"❌ Test is interrupted na {elapsed}s, stoppen.")
+            logger.error(f"Test is interrupted after {elapsed}s, stopping.")
             raise AssertionError("Test instance status is interrupted")
         else:
-            #logger.info(f"⏳ Status: {status} (na {elapsed}s)")
+            # logger.info(f"Status: {status} after {elapsed}s")
             time.sleep(poll_interval)
             elapsed += poll_interval
-    msg = f"⏰ Timeout na {timeout} seconden: status nooit Ready (laatste status: {status})"
+    msg = f"Timeout after {timeout} seconds: status never became Ready (last status: {status})"
     logger.error(msg)
     raise AssertionError(msg)
 
 
-# Hulp functie om test URLs te genereren
+# Helper function to generate test URLs.
 def generate_test_urls(json_paths: Union[str, List[str]]):
-    # json_path kan een string of een tuple/list van twee paden zijn
-    # gedaan om zowel medmij als mo combinaties in te laden
+    # json_path can be a string, tuple or list, so multiple sources can be loaded.
     if isinstance(json_paths, (list, tuple)):
-        combinaties = []
+        combinations = []
         for path in json_paths:
             with open(path, encoding="utf-8") as f:
-                combinaties.extend(json.load(f))
+                combinations.extend(json.load(f))
     else:
         with open(json_paths, encoding="utf-8") as f:
-            combinaties = json.load(f)
+            combinations = json.load(f)
 
     urls = []
-    for comb in combinaties:
-        # Start met de basis URL en verplichte parameters
+    for comb in combinations:
         params = {
-            'branch': comb.get('branch'),
             'informationStandard': comb.get('informationStandard')
         }
 
-        # Voeg optionele parameters alleen toe als ze niet None/null zijn
+        branch = comb.get('branch')
+        if branch and branch != "main":
+            params['branch'] = branch
+
+        # Add optional parameters only when they are not None/null.
         optional_params = {
             'goal': comb.get('goal'),
             'category': comb.get('category'),
@@ -120,10 +119,10 @@ def generate_test_urls(json_paths: Union[str, List[str]]):
             'variant': comb.get('variant')
         }
 
-        # Voeg alleen parameters toe die niet None zijn
+        # Add only parameters that are not None.
         params.update({k: v for k, v in optional_params.items() if v is not None})
 
-        # Bouw de URL op
+        # Build the URL.
         query_params = "&".join(
             f"{k}={urllib.parse.quote(str(v))}"
             for k, v in params.items()
@@ -136,29 +135,29 @@ def generate_test_urls(json_paths: Union[str, List[str]]):
 
 
 def run_client_test(page: Page,
-                    omgeving: str,
-                    informationStandard: str,
+                    environment: str,
+                    information_standard: str,
                     role: str,
-                    #test_count: int,
+                    # test_count: int,
                     category: Optional[str] = None,
                     subcategory: Optional[str] = None,
                     variant: Optional[str] = "default"):
-    page.goto(f"https://my.interoplab.eu/uc-nictiz/tests/kickstart/{omgeving}")
-    login_check(page.locator(f"text=Kickstart your test ({omgeving})"))
+    page.goto(f"https://my.interoplab.eu/uc-nictiz/tests/kickstart/{environment}")
+    login_check(page.locator(f"text=Kickstart your test ({environment})"))
 
-    # Selecteer test set
-    page.get_by_text(informationStandard).click()
-    # Optioneel: kies category en subcategory
+    # Select test set.
+    page.get_by_text(information_standard).click()
+    # Optionally select category and subcategory.
     if category:
-        logger.info(f"Selecteer categorie: {category}")
+        logger.info(f"Select category: {category}")
         page.get_by_text(category, exact=True).click()
 
     if subcategory:
-        logger.info(f"Selecteer subcategorie: {subcategory}")
+        logger.info(f"Select subcategory: {subcategory}")
         page.get_by_text(subcategory, exact=True).click()
 
-    # Kies specifieke client testrol
-    logger.info(f"Kies testrol: {role}")
+    # Select specific client test role.
+    logger.info(f"Select test role: {role}")
     card = page.locator(
     "mat-card",
     has=page.locator("mat-card-title", has_text=f"{role}")
@@ -167,74 +166,74 @@ def run_client_test(page: Page,
         )
     card.click()
 
-    # Controleer of we op de juiste pagina zijn
+    # Check that we are on the correct page.
     expect(page.get_by_role("heading", name="Test set-up overview")).to_be_visible()
 
-    # Controleer juiste simulator URL
+    # Check the simulator URL.
     locator_sim_url = page.locator("#destinationInfo span", has_text="https://nictiz.proxy.interoplab.eu")
-    assert locator_sim_url.inner_text().find("/q/") != -1, f"Geen productieomgeving in URL: {locator_sim_url.inner_text()}"
-    assert locator_sim_url.inner_text().find("/64e4b4df21773f655267edfe"), f"Niet de juiste organisatie-ID in URL: {locator_sim_url.inner_text()}"
+    assert locator_sim_url.inner_text().find("/q/") != -1, f"No production environment in URL: {locator_sim_url.inner_text()}"
+    assert locator_sim_url.inner_text().find("/64e4b4df21773f655267edfe"), f"Unexpected organization ID in URL: {locator_sim_url.inner_text()}"
 
-    # Start test instance
+    # Start test instance.
     page.get_by_role("checkbox", name="Automated").check()
     page.get_by_role("button", name="Create test instance").click()
 
     expect(page.locator("#testInstanceHeader")).to_contain_text("Test Run")
-    expect(page.locator("#testInstanceHeader")).to_contain_text(f"{role} - {omgeving} - {informationStandard}")
+    expect(page.locator("#testInstanceHeader")).to_contain_text(f"{role} - {environment} - {information_standard}")
     expect(page.locator("#instanceState")).to_contain_text("Waiting")
 
     page.get_by_role("button", name="Start test instance").click()
 
-    # Timer starten
+    # Start timer.
     start = time.perf_counter()
-    logger.info("Wacht op status: Running")
+    logger.info("Waiting for status: Running")
     expect(page.locator("#instanceState")).to_contain_text("Running")
-    #expect(page.locator("app-test-instance")).to_have_text(re.compile(fr"Running test \d+/{test_count}"))
+    # expect(page.locator("app-test-instance")).to_have_text(re.compile(fr"Running test \d+/{test_count}"))
 
-    # Wachten tot test gereed is
-    logger.info("Wacht op status: Ready")
+    # Wait until the test is ready.
+    logger.info("Waiting for status: Ready")
     wait_for_ready_or_fail_on_interrupted(page, timeout=120)
 
-    # Timer stoppen
+    # Stop timer.
     elapsed = time.perf_counter() - start
-    logger.info(f"⏱️ Test status wisselde naar Ready in {elapsed:.2f} seconden")
-    logger.info("Status is nu Ready ✅")
+    logger.info(f"Test status changed to Ready in {elapsed:.2f} seconds")
+    logger.info("Status is now Ready")
 
-    # Valideer succesvolle uitvoering
+    # Validate successful execution.
     successful_block = page.locator("mat-card-content >> div", has_text="Successful")
     expect(successful_block.locator("h3")).to_have_text("Successful")
-    #expect(successful_block.locator("span").nth(0)).to_have_text(str(test_count)) #maakt de test minder flexibel
+    # expect(successful_block.locator("span").nth(0)).to_have_text(str(test_count))
     expect(successful_block.locator("span").nth(1)).to_have_text("100%")
-    logger.info(f"Alle test cases zijn succesvol uitgevoerd ✅")
+    logger.info("All test cases completed successfully")
 
 
 
 def run_server_test(page: Page,
-                    omgeving: str,
-                    informationStandard: str,
+                    environment: str,
+                    information_standard: str,
                     role: str,
-                    use_case:str,
-                    fhir_versie: str,
-                    #test_count: int,
+                    use_case: str,
+                    fhir_version: str,
+                    # test_count: int,
                     category: Optional[str] = None,
                     subcategory: Optional[str] = None,
                     variant: Optional[str] = "default"):
-    page.goto(f"https://my.interoplab.eu/uc-nictiz/tests/kickstart/{omgeving}")
-    login_check(page.locator(f"text=Kickstart your test ({omgeving})"))
+    page.goto(f"https://my.interoplab.eu/uc-nictiz/tests/kickstart/{environment}")
+    login_check(page.locator(f"text=Kickstart your test ({environment})"))
 
-    # Selecteer test set
-    page.get_by_text(informationStandard).click()
-    # Optioneel: kies category en subcategory
+    # Select test set.
+    page.get_by_text(information_standard).click()
+    # Optionally select category and subcategory.
     if category:
-        logger.info(f"Selecteer categorie: {category}")
+        logger.info(f"Select category: {category}")
         page.locator("mat-card", has_text=f"{category}").first.click()
 
     if subcategory:
-        logger.info(f"Selecteer subcategorie: {subcategory}")
+        logger.info(f"Select subcategory: {subcategory}")
         page.locator("mat-card", has_text=f"{subcategory}").first.click()
 
-    # Kies specifieke testrol
-    logger.info(f"Kies testrol: {role}")
+    # Select specific test role.
+    logger.info(f"Select test role: {role}")
     card = page.locator(
     "mat-card",
     has=page.locator("mat-card-title", has_text=f"{role}")
@@ -243,53 +242,53 @@ def run_server_test(page: Page,
         )
     card.click()
 
-    #Test setup pagina
+    # Test setup page.
     expect(page.get_by_role("heading", name="Test set-up overview")).to_be_visible()
 
     if use_case == "nictiz":
-        page.get_by_role("textbox", name="Your FHIR server base url").fill(f"https://my.interoplab.eu/uc-nictiz/{fhir_versie}/fhir")
+        page.get_by_role("textbox", name="Your FHIR server base url").fill(f"https://my.interoplab.eu/uc-nictiz/{fhir_version}/fhir")
     elif use_case == "medmij":
-        page.get_by_role("textbox", name="Your FHIR server base url").fill(f"https://nictiz.fhir.interoplab.eu/medmij/{fhir_versie}/fhir")
+        page.get_by_role("textbox", name="Your FHIR server base url").fill(f"https://nictiz.fhir.interoplab.eu/medmij/{fhir_version}/fhir")
     elif use_case == "nictizmedmij":
-        page.get_by_role("textbox", name="Your FHIR server base url").fill(f"https://nictiz.fhir.interoplab.eu/medmij/{fhir_versie}/fhir")
+        page.get_by_role("textbox", name="Your FHIR server base url").fill(f"https://nictiz.fhir.interoplab.eu/medmij/{fhir_version}/fhir")
 
     fill_t_date(page)
 
     page.get_by_role("button", name="Create test instance").click()
 
-    #Testrun pagina
+    # Test run page.
     text = page.locator("#instanceDetails").inner_text()
     try:
         expect(page.locator("#testInstanceHeader")).to_contain_text("Test Run")
-        for part in [informationStandard,omgeving,category,subcategory,role]:
-            if part:  # alleen checken als parameter aanwezig is
-                assert part in text, f"'{part}' ontbreekt in tekst: {text}"
+        for part in [information_standard,environment,category,subcategory,role]:
+            if part:
+                assert part in text, f"'{part}' is missing from text: {text}"
 
         expect(page.locator("#instanceState")).to_contain_text("Waiting")
     except AssertionError as e:
-        testrun = page.locator("#testInstanceHeader").inner_text()
-        logger.info(f"Test instance {testrun} is fout")
+        test_run = page.locator("#testInstanceHeader").inner_text()
+        logger.info(f"Test instance {test_run} failed")
         raise
 
     page.get_by_role("button", name="Start test instance").click()
-    # Start timer
+    # Start timer.
     start = time.perf_counter()
-    logger.info("Wacht op status: Running")
+    logger.info("Waiting for status: Running")
     expect(page.locator("#instanceState")).to_contain_text("Running")
-    #expect(page.locator("app-test-instance")).to_have_text(re.compile(fr"Running test \d+/{test_count}"))
+    # expect(page.locator("app-test-instance")).to_have_text(re.compile(fr"Running test \d+/{test_count}"))
 
 
-    logger.info("Wacht op status: Ready")
+    logger.info("Waiting for status: Ready")
     wait_for_ready_or_fail_on_interrupted(page, timeout=600)
 
-    # Stop timer
+    # Stop timer.
     end = time.perf_counter()
     elapsed = end - start
-    logger.info(f"⏱️ Test status wisselde naar Ready in {elapsed:.2f} seconden")
-    logger.info("Status is nu Ready ✅")
+    logger.info(f"Test status changed to Ready in {elapsed:.2f} seconds")
+    logger.info("Status is now Ready")
 
     successful_block = page.locator("mat-card-content >> div", has_text="Successful")
     expect(successful_block.locator("h3")).to_have_text("Successful")
-    #expect(successful_block.locator("span").nth(0)).to_have_text(str(test_count)) #maakt de test minder flexibel
+    # expect(successful_block.locator("span").nth(0)).to_have_text(str(test_count))
     expect(successful_block.locator("span").nth(1)).to_have_text("100%")
-    logger.info(f"Alle test cases zijn succesvol uitgevoerd ✅")
+    logger.info("All test cases completed successfully")

@@ -2,23 +2,27 @@ import argparse
 import json
 import os
 import sys
+import fnmatch
 
 # -----------------------------
 # CONFIG
 # -----------------------------
 
+#To do: robuuster met valid roles omgaan
 VALID_ROLES = {
-    'Serving-System',
-    'Receiving-System',
-    'XIS-Server',
-    'Serving-XIS',
-    'Validation-Serving-XIS',
-    'Receiving-XIS'
+    'Serving-System*',
+    'Serving System*',
+    'Receiving-System*',
+    'Receiving System*',
+    'XIS-Server*',
+    'Serving-XIS*',
+    'Validation-Serving-XIS*',
+    'Receiving-XIS*'
 }
 
 EXCLUDE_DIRS = {'_LoadResources', '_reference'}
 
-OUTPUT_FILENAME = "unieke_combinaties_all.json"
+OUTPUT_FILENAME = "unique_combinations_all.json"
 
 
 # -----------------------------
@@ -31,6 +35,17 @@ def walk_properties_files(root_dir):
         dirnames[:] = [d for d in dirnames if d not in EXCLUDE_DIRS]
         if "properties.json" in filenames:
             yield os.path.join(dirpath, "properties.json")
+
+
+def is_valid_role(role):
+    """Check if role matches any of the wildcard patterns in VALID_ROLES.
+    
+    Examples:
+        - "Serving-System" matches "Serving-System*" -> True
+        - "Serving-System (MP-MGB-MA)" matches "Serving-System*" -> True
+        - "XIS-Server-v2" matches "XIS-Server*" -> True
+    """
+    return any(fnmatch.fnmatch(role, pattern) for pattern in VALID_ROLES)
 
 
 def load_json(path):
@@ -88,7 +103,8 @@ def combination_key(combo):
         combo['role'],
         combo['category'],
         combo['subcategory'],
-        combo['serverAlias']
+        combo['serverAlias'],
+        combo['variant']
     )
 
 
@@ -109,7 +125,7 @@ def process_folders(root, folders, branch, debug=False):
         folder_path = os.path.join(root, folder)
         files = list(walk_properties_files(folder_path))
 
-        print(f"[{folder}] gevonden properties.json: {len(files)}")
+        print(f"[{folder}] found properties.json files: {len(files)}")
 
         for file in files:
             stats['scanned'] += 1
@@ -122,7 +138,7 @@ def process_folders(root, folders, branch, debug=False):
                 stats['rejected_no_combo'] += 1
                 continue
 
-            if combo['role'] not in VALID_ROLES:
+            if not is_valid_role(combo['role']):
                 stats['rejected_role'] += 1
                 if debug:
                     print(f"DEBUG: skipping role '{combo['role']}' in {file}")
@@ -149,7 +165,7 @@ def parse_args():
     parser.add_argument('--root', '-r', required=True,
                         help='Base root folder to look in.')
     parser.add_argument('--branch', '-b', default='main',
-                        help='Branch naam om aan elk record toe te voegen (default: main)')
+                        help='Branch name to add to each record (default: main)')
     parser.add_argument('--folders', '-f', nargs='+', required=True,
                         help='List of folders under root to process.')
     parser.add_argument('--debug', action='store_true',
@@ -184,7 +200,7 @@ def main():
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(list(results), f, indent=2, ensure_ascii=False)
 
-    print(f"[ALL] Gevonden combinaties: {stats['accepted']} -> {out_path}")
+    print(f"[ALL] Found combinations: {stats['accepted']} -> {out_path}")
 
     if args.debug:
         print("\nDEBUG SUMMARY")

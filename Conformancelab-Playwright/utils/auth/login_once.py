@@ -5,11 +5,11 @@ import os
 import json
 from dotenv import load_dotenv
 
-# Voeg de project-root toe aan het pad (2 mappen omhoog vanaf auth/)
+# Add the project root to the path (2 folders up from auth/).
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from config.config import CONFIG # type: ignore
 
-# Laad environment variables
+# Load environment variables.
 load_dotenv()
 
 def login_and_save_storage():
@@ -27,15 +27,15 @@ def login_and_save_storage():
         }]
         page.add_init_script(f"window.localStorage.setItem('tours', '{json.dumps(tutorial_data)}');")
 
-        # Navigeer naar loginpagina
+        # Navigate to the login page.
         page.goto("https://my.interoplab.eu/")
 
-        # Haal credentials op uit environment variables
+        # Get credentials from environment variables.
         username = os.getenv("CL_USERNAME")
         password = os.getenv("CL_PASSWORD")
         totp_secret = os.getenv("CL_TOTP_SECRET")
 
-        # Controleer of alle benodigde variabelen aanwezig zijn
+        # Check whether all required variables are present.
         if not all([username, password, totp_secret]):
             raise ValueError("Missing required environment variables. Please check your .env file.")
 
@@ -44,26 +44,26 @@ def login_and_save_storage():
         assert isinstance(password, str)
         assert isinstance(totp_secret, str)
 
-        # Vul gebruikersnaam en wachtwoord in
+        # Fill username and password.
         page.fill("#username", username)
         page.fill("#password", password)
         page.click("text=Sign in")
 
-        # Wacht op 2FA-pagina en vul de code in
-        # Gebruik TOTP secret uit environment variables
+        # Wait for the 2FA page and fill in the code.
+        # Use TOTP secret from environment variables.
         totp = pyotp.TOTP(totp_secret)
         code = totp.now()
         page.get_by_role("textbox", name="Token:*").fill(code)
         page.click("text=Login")
 
-        # Wacht tot je bent ingelogd (bv. dashboard zichtbaar is)
+        # Wait until login is complete.
         page.get_by_role("link", name="Dashboard").wait_for(state="visible")
         assert page.url == "https://my.interoplab.eu/"
 
 
-        # Sla de sessie op
+        # Save the session.
         context.storage_state(path=f"{CONFIG['storage_state_path']}")
-        print(f"[INFO] Sessie opgeslagen in: {CONFIG['storage_state_path']}")
+        print(f"[INFO] Session saved in: {CONFIG['storage_state_path']}")
         browser.close()
 
 login_and_save_storage()

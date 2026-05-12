@@ -1,0 +1,9 @@
+# Copy this file to config/bulk.local.toml for personal bulk profiles.
+# The local file is ignored by git.
+
+[profiles.my-set]
+branch = "main"
+info_standards = [
+  'STU3\BgZ-3-0',
+  'R4\Immunization-2-0',
+]

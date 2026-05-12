@@ -1,9 +1,13 @@
 .env
+config/bulk.local.toml
+.venv/
 __pycache__/
 *.pyc
 .pytest_cache/
 test-results/
+tests/test-results/
 utils/auth/state.json
+utils/common/unique_combinations_all.json
 .github/
 archive/
 utils/scripts/

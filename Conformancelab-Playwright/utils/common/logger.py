@@ -17,13 +17,13 @@ def logs_dir() -> str:
     return LOG_DIR
 
 def clear_logs_dir():
-    """Verwijder alle *.log in de logs-map aan het begin van de testrun (controller only)."""
+    """Remove all *.log files in the logs directory at the start of the test run."""
     d = logs_dir()
     for p in glob.glob(os.path.join(d, "*.log")):
         try:
             os.remove(p)
         except PermissionError:
-            # kleine delay en nog eens proberen
+            # Brief delay, then try once more.
             time.sleep(0.1)
             try:
                 os.remove(p)
@@ -31,7 +31,7 @@ def clear_logs_dir():
                 pass
 
 class TestIdFilter(logging.Filter):
-    """Voegt test_id toe aan elk logrecord."""
+    """Add test_id to every log record."""
     def __init__(self):
         super().__init__()
         self._test_id: Optional[str] = None
@@ -46,12 +46,12 @@ class TestIdFilter(logging.Filter):
 _test_id_filter = TestIdFilter()
 
 def setup_logger(name: str = "test-logger", log_file: Optional[str] = None) -> logging.Logger:
-    """Maak thread-safe logger met per-worker bestand en test_id."""
+    """Create a thread-safe logger with a per-worker file and test_id."""
     worker_id = get_worker_id()
     logger_name = f"{name}-{worker_id}"
 
     if log_file is None:
-        # elk worker krijgt eigen bestand
+        # Each worker gets its own file.
         log_file = os.path.join(logs_dir(), f"test-{worker_id}.log")
 
     logger = logging.getLogger(logger_name)
@@ -69,18 +69,18 @@ def setup_logger(name: str = "test-logger", log_file: Optional[str] = None) -> l
         console.setFormatter(fmt_console)
         logger.addHandler(console)
 
-        # per-worker bestand, en we willen per run overschrijven
+        # Per-worker file; overwrite on each run.
         fileh = logging.FileHandler(log_file, mode="w", encoding="utf-8", delay=True)
         fileh.setFormatter(fmt_file)
 
-        # thread-safe emit (meestal niet nodig per worker, maar kan geen kwaad)
+        # Thread-safe emit.
         orig_emit = fileh.emit
         def thread_safe_emit(record):
             with _log_lock:
                 orig_emit(record)
         fileh.emit = thread_safe_emit
 
-        # filters toevoegen
+        # Add filters.
         logger.addFilter(_test_id_filter)
 
         def add_worker_info(record):
