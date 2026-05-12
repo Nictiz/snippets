@@ -1,0 +1,114 @@
+[
+  {
+    "goal": "Cert",
+    "role": "Serving-System",
+    "category": "MedicationData",
+    "subcategory": "AdministrationAgreement",
+    "serverAlias": "nictizmedmij",
+    "variant": "MedMij"
+  },
+  {
+    "goal": "Cert",
+    "role": "Serving-System",
+    "category": "MedicationData",
+    "subcategory": "DispenseRequest",
+    "serverAlias": "nictizmedmij",
+    "variant": "MedMij"
+  },
+  {
+    "goal": "Cert",
+    "role": "Serving-System",
+    "category": "MedicationData",
+    "subcategory": "MedicationAdministration",
+    "serverAlias": "nictizmedmij",
+    "variant": "MedMij"
+  },
+  {
+    "goal": "Cert",
+    "role": "Serving-System",
+    "category": "MedicationData",
+    "subcategory": "MedicationAgreement",
+    "serverAlias": "nictizmedmij",
+    "variant": "MedMij"
+  },
+  {
+    "goal": "Cert",
+    "role": "Serving-System",
+    "category": "MedicationData",
+    "subcategory": "MedicationDispense",
+    "serverAlias": "nictizmedmij",
+    "variant": "MedMij"
+  },
+  {
+    "goal": "Cert",
+    "role": "Serving-System",
+    "category": "MedicationData",
+    "subcategory": "MedicationUse",
+    "serverAlias": "nictizmedmij",
+    "variant": "MedMij"
+  },
+  {
+    "goal": "Cert",
+    "role": "Serving-System",
+    "category": "MedicationData",
+    "subcategory": "VariableDosingRegimen",
+    "serverAlias": "nictizmedmij",
+    "variant": "MedMij"
+  },
+  {
+    "goal": "Test",
+    "role": "Serving-System",
+    "category": "MedicationData",
+    "subcategory": "AdministrationAgreement",
+    "serverAlias": "nictizmedmij",
+    "variant": "MedMij"
+  },
+  {
+    "goal": "Test",
+    "role": "Serving-System",
+    "category": "MedicationData",
+    "subcategory": "DispenseRequest",
+    "serverAlias": "nictizmedmij",
+    "variant": "MedMij"
+  },
+  {
+    "goal": "Test",
+    "role": "Serving-System",
+    "category": "MedicationData",
+    "subcategory": "MedicationAdministration",
+    "serverAlias": "nictizmedmij",
+    "variant": "MedMij"
+  },
+  {
+    "goal": "Test",
+    "role": "Serving-System",
+    "category": "MedicationData",
+    "subcategory": "MedicationAgreement",
+    "serverAlias": "nictizmedmij",
+    "variant": "MedMij"
+  },
+  {
+    "goal": "Test",
+    "role": "Serving-System",
+    "category": "MedicationData",
+    "subcategory": "MedicationDispense",
+    "serverAlias": "nictizmedmij",
+    "variant": "MedMij"
+  },
+  {
+    "goal": "Test",
+    "role": "Serving-System",
+    "category": "MedicationData",
+    "subcategory": "MedicationUse",
+    "serverAlias": "nictizmedmij",
+    "variant": "MedMij"
+  },
+  {
+    "goal": "Test",
+    "role": "Serving-System",
+    "category": "MedicationData",
+    "subcategory": "VariableDosingRegimen",
+    "serverAlias": "nictizmedmij",
+    "variant": "MedMij"
+  }
+]

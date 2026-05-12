@@ -1,0 +1,8 @@
+# Testing and automation
+pytest>=7.0.0
+pytest-xdist>=3.0.0
+playwright>=1.40.0
+pyotp>=2.8.0
+
+# Environment management
+python-dotenv>=1.0.0
