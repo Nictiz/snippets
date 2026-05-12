@@ -11,12 +11,7 @@ This repository uses [Playwright for Python](https://playwright.dev/python/) to 
 
 The bulk tests use this folder structure by default:
 
-```text
-Nictiz/
-  Conformancelab-tests/
-  Nictiz-testscripts/
-    output/
-```
+The default `Nictiz-testscripts/output` is searched from this repository and its parent directories, so nested checkouts such as `<Your repository space>/snippets/Conformancelab-Playwright` also work.
 
 If `Nictiz-testscripts` is located somewhere else, pass the path to its `output` folder with `--input_dir`.
 

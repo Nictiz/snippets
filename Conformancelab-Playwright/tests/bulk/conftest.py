@@ -1,5 +1,6 @@
 # tests/bulk/conftest.py
 
+import os
 import subprocess
 import sys
 import tomllib
@@ -16,11 +17,41 @@ CONFIG_FILE = "bulk-testsets.toml"
 LOCAL_CONFIG_FILE = "bulk.local.toml"
 DEFAULT_BRANCH = "main"
 DEFAULT_INPUT_DIR = "Nictiz-testscripts/output"
-DEFAULT_PROFILE = "all"
+DEFAULT_PROFILE = "ggz"
+
+
+def _project_root() -> Path:
+    return Path(__file__).resolve().parents[2]
 
 
 def _config_dir() -> Path:
-    return Path(__file__).resolve().parents[2] / "config"
+    return _project_root() / "config"
+
+
+def _resolve_input_dir(input_dir: str) -> Path:
+    path = Path(os.path.expandvars(input_dir)).expanduser()
+
+    if path.is_absolute():
+        if path.exists():
+            return path.resolve()
+        raise pytest.UsageError(
+            f"Could not find input_dir '{input_dir}'. Checked:\n- {path}\n\n"
+            "Pass --input_dir or configure config/bulk.local.toml."
+        )
+
+    project_root = _project_root()
+    candidates = [project_root / path]
+    candidates.extend(parent / path for parent in project_root.parents)
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate.resolve()
+
+    checked = "\n".join(f"- {candidate}" for candidate in candidates)
+    raise pytest.UsageError(
+        f"Could not find input_dir '{input_dir}'. Checked:\n{checked}\n\n"
+        "Pass --input_dir or configure config/bulk.local.toml."
+    )
 
 
 def _load_toml(path: Path) -> dict:
@@ -137,14 +168,11 @@ def _extract_bulk_testsets(config):
     if _BULK_TESTSETS_EXTRACTED:
         return
     logger = setup_logger()
-    project_root = Path(__file__).resolve().parents[2]
-    repo_parent = project_root.parent
+    project_root = _project_root()
     extract_script = project_root / "utils" / "common" / "extract_testset.py"
 
     bulk_options = _bulk_options(config)
-    inputdir = Path(bulk_options["input_dir"])
-    if not inputdir.is_absolute():
-        inputdir = repo_parent / inputdir
+    inputdir = _resolve_input_dir(bulk_options["input_dir"])
 
     cmd = [
         sys.executable,
@@ -192,7 +220,7 @@ def pytest_generate_tests(metafunc):
     if "test_url" not in metafunc.fixturenames:
         return
 
-    project_root = Path(__file__).resolve().parents[2]
+    project_root = _project_root()
     json_path = project_root / "utils" / "common" / "unique_combinations_all.json"
     _extract_bulk_testsets(metafunc.config)
 
