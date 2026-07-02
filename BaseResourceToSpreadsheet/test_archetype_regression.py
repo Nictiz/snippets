@@ -221,8 +221,15 @@ def main():
         case_dir = workdir / case_name
         try:
             run_script(script, case["archetype"], case_dir)
-            xlsx_candidates = sorted(case_dir.glob("*.xlsx"))
-            assert xlsx_candidates, f"No xlsx generated in {case_dir}"
+           
+            xlsx_candidates = sorted(
+                p for p in case_dir.glob("*.xlsx")
+                if p.stem.endswith("_base")
+            )
+            assert xlsx_candidates, f"No _base.xlsx found in {case_dir}"
+            assert len(xlsx_candidates) == 1, (
+                f"Expected exactly one _base.xlsx in {case_dir}, found: {[p.name for p in xlsx_candidates]}"
+            )
             rows = load_rows(xlsx_candidates[0])
 
             for spec in case.get("contains", []):

@@ -1,7 +1,13 @@
 """
 ArchetypeToSpreadsheet
-Version: 1.0
+Version: 1.3
 Author: Wouter Zanen
+
+1.0 WZ 31-3-2026 creation
+1.1 WZ 2-4-2026 Corrected sub trees of events not indenting in the excel.
+1.2 WZ 3-4-2026 Changed sheet name to "Struucture" to be compatible with the mixertemplate.
+1.3 WZ 26-6-2026 Added Health_care_facility en location to RM fields.
+
 
 Purpose
 -------
@@ -23,7 +29,7 @@ Typical flow
 5. Write the result to Excel
 """
 
-__version__ = "1.0"
+__version__ = "1.3"
 __author__ = "Wouter Zanen"
 
 import argparse
@@ -40,7 +46,6 @@ import pandas as pd
 import requests
 from openpyxl.worksheet.datavalidation import DataValidation
 
-import templatemixer
 
 # ---------------------------------------------------------------------------
 # Logging and filesystem safety helpers
@@ -82,7 +87,21 @@ class ArchetypeToSpreadsheet:
     """Coordinate CKM lookup, XML download, parsing and Excel writing."""
     SUPPRESSED_RM_PATHS = {"language", "encoding", "guideline_id", "workflow_id"}
 
-    COLUMNS = ["Element", "Aliases", "Card", "Type", "Binding", "Additional binding", "Definition", "Requirements", "Dekking", "Aanvullende informatie", "Obligations: Registrerend systeem", "Obligations: Ontsluitend systeem", "Obligations: Verwerkend systeem"]
+    COLUMNS = [
+        "Element",
+        "Aliases",
+        "Card",
+        "Type",
+        "Binding",
+        "Additional binding",
+        "Definition",
+        "Requirements",
+        "Dekking",
+        "Obligations: Registrerend systeem", 
+        "Obligations: Ontsluitend systeem", 
+        "Obligations: Verwerkend systeem",
+        "Aanvullende informatie",
+    ]
 
     CKM_BASE = "https://ckm.openehr.org/ckm/rest/v1"
 
@@ -92,49 +111,59 @@ class ArchetypeToSpreadsheet:
             ("encoding", "CODE_PHRASE", "1..1", "Character encoding", "source=RM; path=encoding"),
             ("subject", "PARTY_PROXY", "1..1", "Subject of care (patient or other)", "source=RM; path=subject"),
             ("provider", "PARTY_PROXY", "0..1", "Information provider", "source=RM; path=provider"),
-            ("other_participations", "List<PARTICIPATION>", "0..*", "Other participations.", "source=RM; path=other_participations"),
+            ("other_participations", "PARTICIPATION", "0..*", "Other participations.", "source=RM; path=other_participations"),
             ("workflow_id", "OBJECT_REF", "0..1", "External workflow reference", "source=RM; path=workflow_id"),
             ("guideline_id", "OBJECT_REF", "0..1", "Guideline reference", "source=RM; path=guideline_id"),
             ("data/origin", "DV_DATE_TIME", "1..1", "Start of the observation history time series.", "source=RM; path=data/origin"),
+            ("composition/context/health_care_facility", "PARTY_IDENTIFIED", "0..1", "The health care facility under whose care the event took place. This is the most specific workgroup or delivery unit within a care delivery enterprise that has an official identifier in the health system, and can be used to ensure medico-legal accountability.", "source=RM; path=composition/context/health_care_facility"),
+            ("composition/context/location", "String", "0..1", "The actual location where the session occurred, e.g. 'microbiology lab 2', 'home', 'ward A3' and so on", "source=RM; path=composition/context/location"),
         ],
         "EVALUATION": [
             ("language", "CODE_PHRASE", "1..1", "Language of the content", "source=RM; path=language"),
             ("encoding", "CODE_PHRASE", "1..1", "Character encoding", "source=RM; path=encoding"),
             ("subject", "PARTY_PROXY", "1..1", "Subject of care", "source=RM; path=subject"),
             ("provider", "PARTY_PROXY", "0..1", "Information provider", "source=RM; path=provider"),
-            ("other_participations", "List<PARTICIPATION>", "0..*", "Other participations.", "source=RM; path=other_participations"),
+            ("other_participations", "PARTICIPATION", "0..*", "Other participations.", "source=RM; path=other_participations"),
             ("workflow_id", "OBJECT_REF", "0..1", "Workflow reference", "source=RM; path=workflow_id"),
             ("guideline_id", "OBJECT_REF", "0..1", "Guideline reference", "source=RM; path=guideline_id"),
+            ("composition/context/health_care_facility", "PARTY_IDENTIFIED", "0..1", "The health care facility under whose care the event took place. This is the most specific workgroup or delivery unit within a care delivery enterprise that has an official identifier in the health system, and can be used to ensure medico-legal accountability.", "source=RM; path=composition/context/health_care_facility"),
+            ("composition/context/location", "String", "0..1", "The actual location where the session occurred, e.g. 'microbiology lab 2', 'home', 'ward A3' and so on", "source=RM; path=composition/context/location"),
         ],
         "INSTRUCTION": [
             ("language", "CODE_PHRASE", "1..1", "Language", "source=RM; path=language"),
             ("encoding", "CODE_PHRASE", "1..1", "Character encoding", "source=RM; path=encoding"),
             ("subject", "PARTY_PROXY", "1..1", "Subject of care", "source=RM; path=subject"),
             ("provider", "PARTY_PROXY", "0..1", "Information provider", "source=RM; path=provider"),
-            ("other_participations", "List<PARTICIPATION>", "0..*", "Other participations.", "source=RM; path=other_participations"),
+            ("other_participations", "PARTICIPATION", "0..*", "Other participations.", "source=RM; path=other_participations"),
             ("workflow_id", "OBJECT_REF", "0..1", "Workflow reference", "source=RM; path=workflow_id"),
             ("guideline_id", "OBJECT_REF", "0..1", "Guideline reference", "source=RM; path=guideline_id"),
             ("expiry_time", "DV_DATE_TIME", "0..1", "Expiry time of the instruction.", "source=RM; path=expiry_time"),
+            ("composition/context/health_care_facility", "PARTY_IDENTIFIED", "0..1", "The health care facility under whose care the event took place. This is the most specific workgroup or delivery unit within a care delivery enterprise that has an official identifier in the health system, and can be used to ensure medico-legal accountability.", "source=RM; path=composition/context/health_care_facility"),
+            ("composition/context/location", "String", "0..1", "The actual location where the session occurred, e.g. 'microbiology lab 2', 'home', 'ward A3' and so on", "source=RM; path=composition/context/location"),
         ],
         "ACTION": [
             ("language", "CODE_PHRASE", "1..1", "Language", "source=RM; path=language"),
             ("encoding", "CODE_PHRASE", "1..1", "Character encoding", "source=RM; path=encoding"),
             ("subject", "PARTY_PROXY", "1..1", "Subject of care", "source=RM; path=subject"),
             ("provider", "PARTY_PROXY", "0..1", "Information provider", "source=RM; path=provider"),
-            ("other_participations", "List<PARTICIPATION>", "0..*", "Other participations.", "source=RM; path=other_participations"),
+            ("other_participations", "PARTICIPATION", "0..*", "Other participations.", "source=RM; path=other_participations"),
             ("workflow_id", "OBJECT_REF", "0..1", "Workflow reference", "source=RM; path=workflow_id"),
             ("guideline_id", "OBJECT_REF", "0..1", "Guideline reference", "source=RM; path=guideline_id"),
             ("time", "DV_DATE_TIME", "1..1", "Time of the action.", "source=RM; path=time"),
             ("ism_transition", "ISM_TRANSITION", "1..1", "Workflow state transition.", "source=RM; path=ism_transition"),
             ("instruction_details", "INSTRUCTION_DETAILS", "0..1", "Link to instruction.", "source=RM; path=instruction_details"),
+            ("composition/context/health_care_facility", "PARTY_IDENTIFIED", "0..1", "The health care facility under whose care the event took place. This is the most specific workgroup or delivery unit within a care delivery enterprise that has an official identifier in the health system, and can be used to ensure medico-legal accountability.", "source=RM; path=composition/context/health_care_facility"),
+            ("composition/context/location", "String", "0..1", "The actual location where the session occurred, e.g. 'microbiology lab 2', 'home', 'ward A3' and so on", "source=RM; path=composition/context/location"),
         ],
         "ADMIN_ENTRY": [
             ("language", "CODE_PHRASE", "1..1", "Language", "source=RM; path=language"),
             ("encoding", "CODE_PHRASE", "1..1", "Character encoding", "source=RM; path=encoding"),
             ("subject", "PARTY_PROXY", "1..1", "Subject", "source=RM; path=subject"),
             ("provider", "PARTY_PROXY", "0..1", "Information provider", "source=RM; path=provider"),
-            ("other_participations", "List<PARTICIPATION>", "0..*", "Other participations.", "source=RM; path=other_participations"),
+            ("other_participations", "PARTICIPATION", "0..*", "Other participations.", "source=RM; path=other_participations"),
             ("workflow_id", "OBJECT_REF", "0..1", "Workflow reference", "source=RM; path=workflow_id"),
+            ("composition/context/health_care_facility", "PARTY_IDENTIFIED", "0..1", "The health care facility under whose care the event took place. This is the most specific workgroup or delivery unit within a care delivery enterprise that has an official identifier in the health system, and can be used to ensure medico-legal accountability.", "source=RM; path=composition/context/health_care_facility"),
+            ("composition/context/location", "String", "0..1", "The actual location where the session occurred, e.g. 'microbiology lab 2', 'home', 'ward A3' and so on", "source=RM; path=composition/context/location"),
         ],
     }
 
@@ -246,9 +275,9 @@ class ArchetypeToSpreadsheet:
         return rows
 
     def _derive_base_name(self, archetype_id: str) -> str:
-        match = re.match(r"^openEHR-[A-Z]+-([A-Z_]+)\.(.+?)\.(v\d+)$", archetype_id, flags=re.IGNORECASE)
+        match = re.match(r"^openEHR-[A-Z]+-[A-Z_]+\.(.+?)\.v\d+$", archetype_id, flags=re.IGNORECASE)
         if match:
-            name = f"{match.group(1)}.{match.group(2)}.{match.group(3)}"
+            name = match.group(1)
         else:
             name = archetype_id
         name = re.sub(r"[^A-Za-z0-9_.-]+", "_", name)
@@ -526,7 +555,7 @@ class WorkbookWriter:
 
     def write_rows(self, rows: List["MappingRow"], output_folder: pathlib.Path, base_name: str) -> pathlib.Path:
         dataframe = self._build_dataframe(rows)
-        workbook_path = output_folder / f"{base_name}.xlsx"
+        workbook_path = output_folder / f"{base_name}_base.xlsx"
         sheet_name = "Structure"
 
         ensure_output_path_writable(workbook_path, "Excel output file")
@@ -538,6 +567,11 @@ class WorkbookWriter:
 
     def _build_dataframe(self, rows: List["MappingRow"]) -> pd.DataFrame:
         return pd.DataFrame([row.to_list() for row in rows], columns=self.columns)
+
+    @staticmethod
+    def safe_sheet_name(name: str) -> str:
+        cleaned = re.sub(r"[:\\/*?\[\]]", "_", name)
+        return cleaned[:31] or "Sheet1"
 
     @staticmethod
     def row_depth_from_info(info: str) -> int:
@@ -606,10 +640,10 @@ class MappingRow:
     definition: str = ""
     requirements: str = ""
     coverage: str = ""
-    info: str = ""
     obligations_registrerend_systeem: str = ""
     obligations_ontsluitend_systeem: str = ""
     obligations_verwerkend_systeem: str = ""
+    info: str = ""
 
     def to_list(self) -> List[str]:
         return [
@@ -622,10 +656,10 @@ class MappingRow:
             self.definition,
             self.requirements,
             self.coverage,
-            self.info,
             self.obligations_registrerend_systeem,
             self.obligations_ontsluitend_systeem,
-            self.obligations_verwerkend_systeem
+            self.obligations_verwerkend_systeem,
+            self.info,
         ]
 
 
@@ -1017,7 +1051,7 @@ class ArchetypeXmlParser:
                 # Keep visible clusters and slots, but treat slots differently later
                 # by not pretending they are internal structure definitions.
                 if rm_type in self.KEEP_RM_TYPES or is_slot:
-                    cluster_type = "SLOT (CLUSTER)" if is_slot else "CLUSTER"
+                    cluster_type = "SLOT" if is_slot else "CLUSTER"
                     cluster_definition = ((definition or "") + self._cluster_includes_text(child)).strip()
                     cluster_label = child_term.text or self._prettify_segment(path.split("/")[-1])
                     rows.append(
@@ -1726,6 +1760,64 @@ class ArchetypeXmlParser:
 
 
 # ---------------------------------------------------------------------------
+# Optional template-based validation and legend copying
+# ---------------------------------------------------------------------------
+class DataValidationAdder:
+    """Copy validation sheets from a template workbook into the generated output."""
+    def __init__(self, template_path: str):
+        self.template = openpyxl.load_workbook(pathlib.Path(template_path))
+
+    def add_validation(self, workbook_path: pathlib.Path) -> None:
+        """Apply template-driven list validation and legend sheets to the output workbook."""
+        ensure_output_path_writable(workbook_path, "Excel output file")
+        workbook = openpyxl.load_workbook(workbook_path)
+        structure_sheet = workbook[workbook.sheetnames[0]]
+        headers = {cell.value: cell.column_letter for cell in structure_sheet[1]}
+        for header in headers:
+            legend_name = "Legenda" + str(header).capitalize()
+            if legend_name in self.template:
+                self._copy_sheet(workbook, legend_name)
+                self._add_data_validation(workbook, structure_sheet.title, legend_name, headers[header])
+        ensure_output_path_writable(workbook_path, "Excel output file")
+        workbook.save(workbook_path)
+
+    def _copy_sheet(self, workbook: openpyxl.Workbook, sheet_name: str) -> None:
+        new_sheet = workbook.create_sheet(sheet_name)
+        for row in self.template[sheet_name].iter_rows():
+            for cell in row:
+                new_cell = new_sheet[cell.coordinate]
+                new_cell.value = cell.value
+                if cell.has_style:
+                    new_cell.font = copy.copy(cell.font)
+                    new_cell.border = copy.copy(cell.border)
+                    new_cell.fill = copy.copy(cell.fill)
+                    new_cell.number_format = cell.number_format
+                    new_cell.protection = copy.copy(cell.protection)
+                    new_cell.alignment = copy.copy(cell.alignment)
+
+    def _add_data_validation(self, workbook: openpyxl.Workbook, target_sheet_name: str, legend_name: str, column: str) -> None:
+        max_row = len(list(workbook[legend_name].rows))
+        formula = f"={legend_name}!$A$2:$A${max_row + 1}"
+        dv = DataValidation(type="list", formula1=formula, allow_blank=True)
+        workbook[target_sheet_name].add_data_validation(dv)
+        dv.add(f"{column}2:{column}1000")
+
+        for row in range(2, max_row + 3):
+            cell = workbook[legend_name].cell(row, 1)
+            if cell.fill.fgColor.rgb != "00000000":
+                rule = openpyxl.formatting.rule.CellIsRule(
+                    operator="equal",
+                    formula=[f'{legend_name}!${cell.column_letter}${cell.row}'],
+                    fill=openpyxl.styles.PatternFill(
+                        start_color=cell.fill.fgColor.rgb,
+                        end_color=cell.fill.fgColor.rgb,
+                        fill_type="solid",
+                    ),
+                )
+                workbook[target_sheet_name].conditional_formatting.add(f"{column}2:{column}1000", rule)
+
+
+# ---------------------------------------------------------------------------
 # CLI entry point
 # ---------------------------------------------------------------------------
 def main(argv: List[str]) -> int:
@@ -1769,8 +1861,8 @@ def main(argv: List[str]) -> int:
     print(f"Created: {out_path}")
 
     if args.template:
-        mixer = templatemixer.TemplateMixer(args.template)
-        mixer.mix(out_path)
+        DataValidationAdder(args.template).add_validation(out_path)
+        print(f"Added validations from template: {args.template}")
 
     return 0
 
