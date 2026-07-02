@@ -1,11 +1,13 @@
 """
 ArchetypeToSpreadsheet
-Version: 1.1
+Version: 1.3
 Author: Wouter Zanen
 
 1.0 WZ 31-3-2026 creation
 1.1 WZ 2-4-2026 Corrected sub trees of events not indenting in the excel.
 1.2 WZ 3-4-2026 Changed sheet name to "Struucture" to be compatible with the mixertemplate.
+1.3 WZ 26-6-2026 Added Health_care_facility en location to RM fields.
+
 
 Purpose
 -------
@@ -27,7 +29,7 @@ Typical flow
 5. Write the result to Excel
 """
 
-__version__ = "1.1"
+__version__ = "1.3"
 __author__ = "Wouter Zanen"
 
 import argparse
@@ -113,6 +115,8 @@ class ArchetypeToSpreadsheet:
             ("workflow_id", "OBJECT_REF", "0..1", "External workflow reference", "source=RM; path=workflow_id"),
             ("guideline_id", "OBJECT_REF", "0..1", "Guideline reference", "source=RM; path=guideline_id"),
             ("data/origin", "DV_DATE_TIME", "1..1", "Start of the observation history time series.", "source=RM; path=data/origin"),
+            ("composition/context/health_care_facility", "PARTY_IDENTIFIED", "0..1", "The health care facility under whose care the event took place. This is the most specific workgroup or delivery unit within a care delivery enterprise that has an official identifier in the health system, and can be used to ensure medico-legal accountability.", "source=RM; path=composition/context/health_care_facility"),
+            ("composition/context/location", "String", "0..1", "The actual location where the session occurred, e.g. 'microbiology lab 2', 'home', 'ward A3' and so on", "source=RM; path=composition/context/location"),
         ],
         "EVALUATION": [
             ("language", "CODE_PHRASE", "1..1", "Language of the content", "source=RM; path=language"),
@@ -122,6 +126,8 @@ class ArchetypeToSpreadsheet:
             ("other_participations", "PARTICIPATION", "0..*", "Other participations.", "source=RM; path=other_participations"),
             ("workflow_id", "OBJECT_REF", "0..1", "Workflow reference", "source=RM; path=workflow_id"),
             ("guideline_id", "OBJECT_REF", "0..1", "Guideline reference", "source=RM; path=guideline_id"),
+            ("composition/context/health_care_facility", "PARTY_IDENTIFIED", "0..1", "The health care facility under whose care the event took place. This is the most specific workgroup or delivery unit within a care delivery enterprise that has an official identifier in the health system, and can be used to ensure medico-legal accountability.", "source=RM; path=composition/context/health_care_facility"),
+            ("composition/context/location", "String", "0..1", "The actual location where the session occurred, e.g. 'microbiology lab 2', 'home', 'ward A3' and so on", "source=RM; path=composition/context/location"),
         ],
         "INSTRUCTION": [
             ("language", "CODE_PHRASE", "1..1", "Language", "source=RM; path=language"),
@@ -132,6 +138,8 @@ class ArchetypeToSpreadsheet:
             ("workflow_id", "OBJECT_REF", "0..1", "Workflow reference", "source=RM; path=workflow_id"),
             ("guideline_id", "OBJECT_REF", "0..1", "Guideline reference", "source=RM; path=guideline_id"),
             ("expiry_time", "DV_DATE_TIME", "0..1", "Expiry time of the instruction.", "source=RM; path=expiry_time"),
+            ("composition/context/health_care_facility", "PARTY_IDENTIFIED", "0..1", "The health care facility under whose care the event took place. This is the most specific workgroup or delivery unit within a care delivery enterprise that has an official identifier in the health system, and can be used to ensure medico-legal accountability.", "source=RM; path=composition/context/health_care_facility"),
+            ("composition/context/location", "String", "0..1", "The actual location where the session occurred, e.g. 'microbiology lab 2', 'home', 'ward A3' and so on", "source=RM; path=composition/context/location"),
         ],
         "ACTION": [
             ("language", "CODE_PHRASE", "1..1", "Language", "source=RM; path=language"),
@@ -144,6 +152,8 @@ class ArchetypeToSpreadsheet:
             ("time", "DV_DATE_TIME", "1..1", "Time of the action.", "source=RM; path=time"),
             ("ism_transition", "ISM_TRANSITION", "1..1", "Workflow state transition.", "source=RM; path=ism_transition"),
             ("instruction_details", "INSTRUCTION_DETAILS", "0..1", "Link to instruction.", "source=RM; path=instruction_details"),
+            ("composition/context/health_care_facility", "PARTY_IDENTIFIED", "0..1", "The health care facility under whose care the event took place. This is the most specific workgroup or delivery unit within a care delivery enterprise that has an official identifier in the health system, and can be used to ensure medico-legal accountability.", "source=RM; path=composition/context/health_care_facility"),
+            ("composition/context/location", "String", "0..1", "The actual location where the session occurred, e.g. 'microbiology lab 2', 'home', 'ward A3' and so on", "source=RM; path=composition/context/location"),
         ],
         "ADMIN_ENTRY": [
             ("language", "CODE_PHRASE", "1..1", "Language", "source=RM; path=language"),
@@ -152,6 +162,8 @@ class ArchetypeToSpreadsheet:
             ("provider", "PARTY_PROXY", "0..1", "Information provider", "source=RM; path=provider"),
             ("other_participations", "PARTICIPATION", "0..*", "Other participations.", "source=RM; path=other_participations"),
             ("workflow_id", "OBJECT_REF", "0..1", "Workflow reference", "source=RM; path=workflow_id"),
+            ("composition/context/health_care_facility", "PARTY_IDENTIFIED", "0..1", "The health care facility under whose care the event took place. This is the most specific workgroup or delivery unit within a care delivery enterprise that has an official identifier in the health system, and can be used to ensure medico-legal accountability.", "source=RM; path=composition/context/health_care_facility"),
+            ("composition/context/location", "String", "0..1", "The actual location where the session occurred, e.g. 'microbiology lab 2', 'home', 'ward A3' and so on", "source=RM; path=composition/context/location"),
         ],
     }
 
