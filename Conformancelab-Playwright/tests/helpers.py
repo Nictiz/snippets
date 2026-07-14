@@ -66,7 +66,6 @@ def generate_test_urls(json_paths: Union[str, List[str]]):
             'category': comb.get('category'),
             'subcategory': comb.get('subcategory'),
             'role': comb.get('role'),
-            'variant': comb.get('variant')
         }
 
         # Add only parameters that are not None.

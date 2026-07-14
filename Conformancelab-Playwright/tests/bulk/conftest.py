@@ -262,7 +262,7 @@ def _extract_bulk_testsets(config):
 def _url_id(url: str) -> str:
     """Build a readable ID from query parameters."""
     q = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
-    keys = ["informationStandard", "goal", "category", "subcategory", "role", "variant"]
+    keys = ["informationStandard", "goal", "category", "subcategory", "role"]
     parts = [q.get(k, [""])[0] for k in keys]
     return " | ".join(p for p in parts if p) or url
 

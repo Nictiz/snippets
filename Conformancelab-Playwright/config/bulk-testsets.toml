@@ -1,5 +1,5 @@
 [defaults]
-branch = "release-2026.30"
+branch = "main"
 input_dir = "Nictiz-testscripts/output"
 profile = "ggz"
 

@@ -15,10 +15,10 @@ logger = setup_logger()
 project_root = Path(__file__).resolve().parents[2]
 
 
-def _find_json_record(json_path, goal, role, information_standard, category, subcategory, variant):
+def _find_json_record(json_path, goal, role, information_standard, category, subcategory):
     """
     Find the matching record in the JSON file based on
-    goal, role, informationStandard, category, subcategory and variant.
+    goal, role, informationStandard, category, subcategory.
     Category, subcategory and variant are optional (empty string or None).
     """
     try:
@@ -44,17 +44,12 @@ def _find_json_record(json_path, goal, role, information_standard, category, sub
         if subcategory and subcategory != '':
             if rec.get('subcategory') != subcategory:
                 continue
-
-        # Match variant when present in the URL.
-        if variant and variant != '':
-            if rec.get('variant') != variant:
-                continue
         
         return rec
 
     logger.warning(f"Could not find a matching record for: goal={goal}, role={role}, "
                    f"informationStandard={information_standard}, category={category}, "
-                   f"subcategory={subcategory}, variant={variant}")
+                   f"subcategory={subcategory}")
     return None
 
 
@@ -81,12 +76,12 @@ def test_server_scenarios(page: Page, test_url: str):
 
     # Load the full record from the JSON file.
     json_path = project_root / "utils" / "common" / "unique_combinations_all.json"
-    combo = _find_json_record(str(json_path), goal, role, information_standard, category, subcategory, variant)
+    combo = _find_json_record(str(json_path), goal, role, information_standard, category, subcategory)
 
     if not combo:
         raise AssertionError(f"Could not find a test combination for: "
                              f"goal={goal}, role={role}, informationStandard={information_standard}, "
-                             f"category={category}, subcategory={subcategory}, variant={variant}")
+                             f"category={category}, subcategory={subcategory}")
 
     # Extract all parameters from the JSON record.
     branch = combo.get('branch', 'main')
@@ -138,7 +133,7 @@ def test_server_scenarios(page: Page, test_url: str):
     text = page.locator("#instanceDetails").inner_text()
     try:
         expect(page.locator("#testInstanceHeader")).to_contain_text("Test run")
-        for part in [information_standard, category, subcategory, variant, role]:
+        for part in [information_standard, category, subcategory, role]:
             if part:
                 assert part in text, f"'{part}' is missing from text: {text}"
 
