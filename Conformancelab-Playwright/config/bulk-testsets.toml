@@ -1,5 +1,5 @@
 [defaults]
-branch = "main"
+branch = "release-2026.30"
 input_dir = "Nictiz-testscripts/output"
 profile = "ggz"
 
@@ -99,7 +99,7 @@ info_standards = [
   'STU3\AllergyIntolerance-3-0',
   'STU3\BgLZ-3-0',
   'STU3\BgZ-3-0',
-  'STU3\BgZ-MSZ-1-2-2',
+  'STU3\BgZ-MSZ-2-0',
   'STU3\eAppointment-2-0',
   'STU3\Geboortezorg-1-0',
   'STU3\Geboortezorg-2',
@@ -108,8 +108,7 @@ info_standards = [
   'STU3\Images-2-0',
   'STU3\LaboratoryResults-2-0',
   'STU3\PDFA-3-0',
-  'STU3\SelfMeasurements-2-0',
+  'STU3\VitalSigns-2-0',
   'R4\Immunization-2-0',
-  'R4\PatientCorrections-1-0',
-  'R4\MP9-3-0-0-beta\MO\Test\Step-3',
+  'R4\PatientCorrections-1-0'
 ]

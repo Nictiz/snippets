@@ -108,7 +108,7 @@ def generate_test_urls(json_paths: Union[str, List[str]]):
 
         branch = comb.get('branch')
         if branch and branch != "main":
-            params['branch'] = branch
+            params['Branch'] = branch
 
         # Add optional parameters only when they are not None/null.
         optional_params = {
