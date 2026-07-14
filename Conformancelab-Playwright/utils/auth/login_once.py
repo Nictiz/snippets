@@ -4,6 +4,8 @@ import sys
 import os
 import json
 from dotenv import load_dotenv
+import argparse
+from pathlib import Path
 
 # Add the project root to the path (2 folders up from auth/).
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
@@ -12,7 +14,10 @@ from config.config import CONFIG # type: ignore
 # Load environment variables.
 load_dotenv()
 
-def login_and_save_storage():
+def login_and_save_storage(storage_state_path: str):
+    output_path = Path(storage_state_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)
         context = browser.new_context()
@@ -62,8 +67,21 @@ def login_and_save_storage():
 
 
         # Save the session.
-        context.storage_state(path=f"{CONFIG['storage_state_path']}")
-        print(f"[INFO] Session saved in: {CONFIG['storage_state_path']}")
+        context.storage_state(path=str(output_path))
+        print(f"[INFO] Session saved in: {output_path}")
         browser.close()
 
-login_and_save_storage()
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--output",
+        default=CONFIG["storage_state_path"],
+        help="Path for the generated Playwright storage state",
+    )
+    args = parser.parse_args()
+
+    login_and_save_storage(args.output)
+
+
+if __name__ == "__main__":
+    main()

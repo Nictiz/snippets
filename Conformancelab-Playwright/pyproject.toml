@@ -5,6 +5,7 @@ description = "Playwright tests voor Conformancelab"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "filelock>=3.29.7",
     "playwright>=1.51.0",
     "pyotp>=2.9.0",
     "pytest>=8.0.0",

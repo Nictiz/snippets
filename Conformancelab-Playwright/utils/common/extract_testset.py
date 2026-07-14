@@ -1,8 +1,9 @@
 import argparse
+import fnmatch
 import json
 import os
 import sys
-import fnmatch
+
 
 # -----------------------------
 # CONFIG
@@ -15,6 +16,7 @@ VALID_ROLES = {
     'Receiving-System*',
     'Receiving System*',
     'XIS-Server*',
+    'XIS Server*',
     'Serving-XIS*',
     'Validation-Serving-XIS*',
     'Receiving-XIS*'
@@ -66,6 +68,17 @@ def extract_name_field(value):
         return value.get("name")
     return value  # string or None
 
+INTERNAL_ROLE_TEXT = "nictiz internal"
+
+
+def is_nictiz_internal_role(role: str | None) -> bool:
+    """Return whether a system role represents the Nictiz internal variant."""
+    if not role:
+        return False
+
+    normalized_role = " ".join(role.casefold().split())
+    return INTERNAL_ROLE_TEXT in normalized_role
+
 
 def extract_combination(path, branch):
     """Return normalized combination dict or None."""
@@ -83,7 +96,6 @@ def extract_combination(path, branch):
         'category': data.get('category'),
         'subcategory': data.get('subcategory'),
         'serverAlias': data.get('serverAlias'),
-        'variant': extract_name_field(data.get('variant'))
     }
 
     # Valid combo must have role and serverAlias
@@ -93,18 +105,15 @@ def extract_combination(path, branch):
     return None
 
 
-def combination_key(combo):
-    """Generate a unique key for deduplication."""
+def testset_key(combo):
+    """Group all system-role alternatives belonging to the same testset."""
     return (
-        combo['goal'],
-        combo['fhirVersion'],
-        combo['informationStandard'],
-        combo['usecase'],
-        combo['role'],
-        combo['category'],
-        combo['subcategory'],
-        combo['serverAlias'],
-        combo['variant']
+        combo["goal"],
+        combo["fhirVersion"],
+        combo["informationStandard"],
+        combo["usecase"],
+        combo["category"],
+        combo["subcategory"],
     )
 
 
@@ -113,7 +122,7 @@ def combination_key(combo):
 # -----------------------------
 
 def process_folders(root, folders, branch, debug=False):
-    combined = {}
+    grouped = {}
     stats = {
         'scanned': 0,
         'accepted': 0,
@@ -144,14 +153,26 @@ def process_folders(root, folders, branch, debug=False):
                     print(f"DEBUG: skipping role '{combo['role']}' in {file}")
                 continue
 
-            key = combination_key(combo)
-            is_preferred = combo['variant'] == "Nictiz-intern"
+            key = testset_key(combo)
+            grouped.setdefault(key, []).append(combo)
+                
 
-            if key not in combined or is_preferred:
-                combined[key] = combo
-                stats['accepted'] += 1
+    selected = []
 
-    return combined.values(), stats
+    for combinations in grouped.values():
+        internal_combinations = [
+            combo
+            for combo in combinations
+            if is_nictiz_internal_role(combo["role"])
+        ]
+
+        if internal_combinations:
+            selected.extend(internal_combinations)
+        else:
+            selected.extend(combinations)
+
+    stats["accepted"] = len(selected)
+    return selected, stats
 
 
 # -----------------------------

@@ -12,7 +12,7 @@ logger = setup_logger()
 def test_login(page):
     page.goto("https://my.interoplab.eu/uc-nictiz/")
     try:
-        assert page.locator("text=WelCome").is_visible()
+        assert page.locator("text=Welcome").is_visible()
         assert page.locator("text=Your personal Nictiz dashboard").is_visible()
     except AssertionError:
         raise AssertionError("Login failed")

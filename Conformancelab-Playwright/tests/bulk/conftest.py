@@ -6,12 +6,10 @@ import sys
 import tomllib
 import urllib.parse
 from pathlib import Path
-
 import pytest
-
 from tests.helpers import generate_test_urls
 from utils.common.logger import setup_logger
-
+from filelock import FileLock
 
 CONFIG_FILE = "bulk-testsets.toml"
 LOCAL_CONFIG_FILE = "bulk.local.toml"
@@ -27,6 +25,13 @@ def _project_root() -> Path:
 def _config_dir() -> Path:
     return _project_root() / "config"
 
+def _generated_json_path() -> Path:
+    return (
+        _project_root()
+        / "utils"
+        / "common"
+        / "unique_combinations_all.json"
+    )
 
 def _resolve_input_dir(input_dir: str) -> Path:
     path = Path(os.path.expandvars(input_dir)).expanduser()
@@ -162,14 +167,22 @@ _BULK_TESTSETS_EXTRACTED = False
 
 
 def _extract_bulk_testsets(config):
-    """Rebuild the bulk test set input before test_url is parametrized."""
+    """Rebuild the bulk input once per pytest run."""
     global _BULK_TESTSETS_EXTRACTED
 
+    # Voorkomt herhaling binnen dezelfde worker.
     if _BULK_TESTSETS_EXTRACTED:
         return
+
     logger = setup_logger()
     project_root = _project_root()
-    extract_script = project_root / "utils" / "common" / "extract_testset.py"
+    extract_script = (
+        project_root
+        / "utils"
+        / "common"
+        / "extract_testset.py"
+    )
+    json_path = _generated_json_path()
 
     bulk_options = _bulk_options(config)
     inputdir = _resolve_input_dir(bulk_options["input_dir"])
@@ -177,41 +190,79 @@ def _extract_bulk_testsets(config):
     cmd = [
         sys.executable,
         str(extract_script),
-        "--root", str(inputdir),
-        "--branch", str(bulk_options["branch"]),
+        "--root",
+        str(inputdir),
+        "--branch",
+        str(bulk_options["branch"]),
         "--folders",
-    ] + bulk_options["info_standards"]
+        *bulk_options["info_standards"],
+    ]
 
-    print(f"Run extract_testset.py: {extract_script}")
-    print(
-        f"Bulk profile: {bulk_options['profile']} "
-        f"({len(bulk_options['info_standards'])} information standards)"
-    )
+    coordination_dir = project_root / "test-results"
+    coordination_dir.mkdir(parents=True, exist_ok=True)
 
-    try:
-        subprocess.run(cmd, check=True)
-        print("extract_testset.py completed successfully")
-    except subprocess.CalledProcessError as e:
-        logger.error(f"extract_testset.py failed: {e}")
-        pytest.exit("Test set extraction failed; test run aborted.", returncode=1)
+    lock_path = coordination_dir / "bulk-extraction.lock"
+    marker_path = coordination_dir / "bulk-extraction.uid"
+
+    # xdist geeft alle workers binnen één run dezelfde unieke ID.
+    run_uid = os.getenv("PYTEST_XDIST_TESTRUNUID")
+
+    with FileLock(str(lock_path)):
+        marker_uid = (
+            marker_path.read_text(encoding="utf-8")
+            if marker_path.exists()
+            else None
+        )
+
+        already_extracted = (
+            run_uid is not None
+            and marker_uid == run_uid
+            and json_path.exists()
+        )
+
+        if not already_extracted:
+            print(f"Run extract_testset.py: {extract_script}")
+            print(
+                f"Bulk profile: {bulk_options['profile']} "
+                f"({len(bulk_options['info_standards'])} "
+                "information standards)"
+            )
+
+            try:
+                subprocess.run(cmd, check=True)
+            except subprocess.CalledProcessError as error:
+                logger.error(
+                    f"extract_testset.py failed: {error}"
+                )
+                pytest.exit(
+                    "Test set extraction failed; "
+                    "test run aborted.",
+                    returncode=1,
+                )
+
+            if not json_path.exists():
+                pytest.exit(
+                    "Test set extraction completed without "
+                    f"creating {json_path}.",
+                    returncode=1,
+                )
+
+            # Alleen schrijven nadat extractie volledig geslaagd is.
+            if run_uid is not None:
+                marker_path.write_text(
+                    run_uid,
+                    encoding="utf-8",
+                )
+
+            print("extract_testset.py completed successfully")
 
     _BULK_TESTSETS_EXTRACTED = True
-
-
-@pytest.fixture(scope="session")
-def server_config(request):
-    """Pass bulk test configuration to test cases."""
-    bulk_options = _bulk_options(request.config)
-    return {
-        "branch": bulk_options["branch"],
-        "info_standard": bulk_options["info_standards"],
-    }
 
 
 def _url_id(url: str) -> str:
     """Build a readable ID from query parameters."""
     q = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
-    keys = ["informationStandard", "goal", "category", "subcategory", "role", "variant"]
+    keys = ["informationStandard", "goal", "category", "subcategory", "role"]
     parts = [q.get(k, [""])[0] for k in keys]
     return " | ".join(p for p in parts if p) or url
 
@@ -220,11 +271,14 @@ def pytest_generate_tests(metafunc):
     if "test_url" not in metafunc.fixturenames:
         return
 
-    project_root = _project_root()
-    json_path = project_root / "utils" / "common" / "unique_combinations_all.json"
+    json_path = _generated_json_path()
     _extract_bulk_testsets(metafunc.config)
 
     urls = generate_test_urls([str(json_path)])
     print(f"Total tests to run: {len(urls)}")
 
-    metafunc.parametrize("test_url", urls, ids=[_url_id(u) for u in urls])
+    metafunc.parametrize(
+        "test_url", 
+        urls, 
+        ids=[_url_id(u) for u in urls],
+        )

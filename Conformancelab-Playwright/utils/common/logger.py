@@ -5,9 +5,12 @@ from typing import Optional
 import threading
 import time
 import glob
+from pathlib import Path
 
 _log_lock = threading.Lock()
-LOG_DIR = "test-results/logs"
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+LOG_DIR = PROJECT_ROOT / "test-results" / "logs"
 
 def get_worker_id() -> str:
     return os.environ.get("PYTEST_XDIST_WORKER", "master")

@@ -9,9 +9,7 @@ This repository uses [Playwright for Python](https://playwright.dev/python/) to 
 - Access to the Interoplab platform
 - A local checkout of `Nictiz-testscripts` with generated output
 
-The bulk tests use this folder structure by default:
-
-The default `Nictiz-testscripts/output` is searched from this repository and its parent directories, so nested checkouts such as `<Your repository space>/snippets/Conformancelab-Playwright` also work.
+The bulk tests use this folder structure by default. The default `Nictiz-testscripts/output` is searched from this repository and its parent directories, so nested checkouts such as `<Your repository space>/snippets/Conformancelab-Playwright` also work.
 
 If `Nictiz-testscripts` is located somewhere else, pass the path to its `output` folder with `--input_dir`.
 
@@ -43,7 +41,9 @@ CL_TOTP_SECRET=your.CL.TOTP.secret
 
 `CL_TOTP_SECRET` can be found in the password manager or when setting up the 2MFA for your Interoplab account. The `.env` file is ignored by Git.
 
-During a test run, `utils/auth/login_once.py` automatically creates `utils/auth/state.json`. This file is also ignored by Git.
+Authentication is created lazily: a login is performed only when a selected test uses an authenticated browser context. For parallel runs, all pytest-xdist workers share one temporary Playwright storage-state file for that test run. Pytest manages this temporary file, so it is not stored in the repository.
+
+When `utils/auth/login_once.py` is run manually without an `--output` argument, it writes the storage state to `utils/auth/state.json`. This file is ignored by Git.
 
 ## Bulk Tests
 
