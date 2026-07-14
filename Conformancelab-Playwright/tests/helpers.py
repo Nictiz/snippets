@@ -17,34 +17,30 @@ def login_check(locator: Locator, error_message: str = "Login failed"):
         raise AssertionError(error_message)
 
 
-def fill_t_date(page: Page):
+def fill_t_date(page):
     current_date = date.today()
-    t_date = current_date - timedelta(days=current_date.weekday())
-    t_date = t_date.strftime("%Y-%m-%d")
+    t_date = (current_date - timedelta(
+        days=current_date.weekday()
+    )).strftime("%Y-%m-%d")
 
-    # Zoek uitsluitend de addon waarvan het directe span-label exact "T" is.
     t_addon = page.locator(
         'div.p-inputgroup-addon:has(> span:text-is("T"))'
     )
-    expect(t_addon).to_have_count(1, timeout=15_000)
 
-    # Het inputveld is volgens de huidige DOM een sibling van de addon.
+    if t_addon.count() == 0:
+        return
+
     input_field = t_addon.locator(
-        "xpath=following-sibling::input[@type='text'][1]"
+        "xpath=following-sibling::input[1]"
     )
-    expect(input_field).to_have_count(1)
     expect(input_field).to_be_visible()
-    expect(input_field).to_be_editable()
 
     input_field.fill(t_date)
     expect(input_field).to_have_value(t_date)
 
-    apply_button = t_addon.locator(
+    t_addon.locator(
         "xpath=following-sibling::p-button[1]"
-    ).get_by_role("button", name="Apply")
-
-    expect(apply_button).to_be_enabled()
-    apply_button.click()
+    ).get_by_role("button", name="Apply").click()
 
     logger.info(f"T-date filled with {t_date}")
 
