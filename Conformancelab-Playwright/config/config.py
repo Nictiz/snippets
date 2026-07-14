@@ -1,12 +1,12 @@
-# config.py
+from pathlib import Path
 
-# Algemene instellingen voor tests
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
 CONFIG = {
-    "base_url": "https://my.interoplab.eu",                 # 🌐 Basis-URL voor de applicatie
-    "headless": True,                                      # 🐱‍👤 Test zichtbaar of niet
-    "browser_name": "chromium",  # of "firefox", "webkit"   # 🦾 Browser type
-    "storage_state_path": "utils/auth/state.json",               # 📂 Pad voor opslagstatus
-    # "slow_mo": 3000,                                      # Delay between actions in milliseconds
-    "tracing_enabled": True,                                # 🔍 Tracing aan/uit
-    "trace_output_path": "test-results/trace.zip",          # 📂 Pad voor trace-bestand
+    "base_url": "https://my.interoplab.eu",
+    "headless": True,
+    "browser_name": "chromium",
+    "storage_state_path": str(PROJECT_ROOT / "utils" / "auth" / "state.json"),
+    "tracing_enabled": True,
+    "trace_output_path": str(PROJECT_ROOT / "test-results" / "trace.zip"),
 }

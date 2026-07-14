@@ -70,7 +70,7 @@ info_standards = [
 
 [profiles.vitalsigns]
 info_standards = [
-  'STU3\SelfMeasurements-2-0'
+  'STU3\VitalSigns-2-0'
 ]
 
 [profiles.vi]
