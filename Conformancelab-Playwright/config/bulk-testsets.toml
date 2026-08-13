@@ -1,7 +1,7 @@
 [defaults]
-branch = "main"
+branch = "release-2026.34"
 input_dir = "Nictiz-testscripts/output"
-profile = "ggz"
+profile = "eappointment"
 
 [profiles.allergy]
 info_standards = [

@@ -97,8 +97,8 @@ def test_server_scenarios(page: Page, test_url: str):
     
     # Fill in the test setup.
     expect(page.get_by_role("heading", name="Test setup")).to_be_visible()
-    server_field = page.get_by_role("textbox", name="Your server base URL")
-    auth_field = page.get_by_role("textbox", name="Your custom Authorization header")
+    server_field = page.get_by_text('Your server base URL').locator('..').get_by_role('textbox');
+    auth_field = page.get_by_text('Your custom Authorization header').locator('..').get_by_role('textbox'); 
 
     if branch == "main":
         if use_case == "nictiz":
@@ -129,7 +129,7 @@ def test_server_scenarios(page: Page, test_url: str):
     fill_t_date(page)
 
     # Start the test run.
-    page.get_by_role("button", name="Create test run").click()
+    page.get_by_role("button", name="Start test run").click()
     text = page.locator("#instanceDetails").inner_text()
     try:
         expect(page.locator("#testInstanceHeader")).to_contain_text("Test run")
